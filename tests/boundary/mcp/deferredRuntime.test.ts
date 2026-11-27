@@ -115,7 +115,6 @@ const connect = async (
 };
 
 it.each([
-  { mode: "legacy", environment: { REA_MCP_OUTPUT_SCHEMA_PROFILE: "off" } },
   { mode: "auto", environment: {} },
   {
     mode: "auto",
@@ -324,7 +323,7 @@ it.each([
   async ({ environment, eager }) => {
     const { nodeArguments, loadedModules } = await observeRuntimeModules();
     const { client, stderr } = await connect(
-      "legacy",
+      "auto",
       environment,
       nodeArguments,
     );
@@ -433,129 +432,105 @@ it("records only the output schema material needed by the deferred catalog", asy
   ).toHaveProperty("properties");
 });
 
-it.each([
-  { mode: "legacy", environment: { REA_MCP_OUTPUT_SCHEMA_PROFILE: "off" } },
-  { mode: "auto", environment: {} },
-] as const)(
-  "serves discovery and canonical handlers over $mode negotiation",
-  async ({ mode, environment }) => {
-    const recorded = JSON.parse(
-      await readFile("dist/mcp-catalog.json", "utf8"),
-    );
-    const { client, stderr } = await connect(mode, environment);
-    const before = await client.listTools();
-    const withoutOutput = ({
-      outputSchema: _output,
-      ...tool
-    }: {
-      outputSchema?: unknown;
-    }) => tool;
-    // Compact output schemas come from the recorded catalog. The rest of
-    // each tool's wire definition must match the deferred off-profile listing.
-    if (mode === "legacy") {
-      const eager = await connect(mode, {
-        REA_MCP_OUTPUT_SCHEMA_PROFILE: "compact",
-      });
-      const canonical = await eager.client.listTools();
-      expect(
-        canonical.tools.every((tool) => tool.outputSchema !== undefined),
-      ).toBe(true);
-      expect(before).toEqual({
-        ...canonical,
-        tools: canonical.tools.map(withoutOutput),
-      });
-    }
-    expect(before.tools.map(withoutOutput)).toEqual(
-      recorded.tools.map(withoutOutput),
-    );
-    // The default output profile omits the recorded output schemas.
-    expect(
-      before.tools.filter(({ outputSchema }) => outputSchema !== undefined),
-    ).toEqual([]);
-    const { prompts } = await client.listPrompts();
-    expect(prompts).toEqual(
-      PROMPT_CONTRACTS.map((prompt) => ({
-        name: prompt.name,
-        title: prompt.title,
-        description: prompt.description,
-        arguments: Object.entries(prompt.arguments).map(([name, argument]) => ({
-          name,
-          description: argument.description,
-          required: argument.required,
-        })),
+it("serves discovery and canonical handlers over modern negotiation", async () => {
+  const environment = {};
+  const recorded = JSON.parse(await readFile("dist/mcp-catalog.json", "utf8"));
+  const { client, stderr } = await connect("auto", environment);
+  const before = await client.listTools();
+  const withoutOutput = ({
+    outputSchema: _output,
+    ...tool
+  }: {
+    outputSchema?: unknown;
+  }) => tool;
+  // Compact output schemas come from the recorded catalog. The rest of
+  // each tool's wire definition must match the deferred off-profile listing.
+  expect(before.tools.map(withoutOutput)).toEqual(
+    recorded.tools.map(withoutOutput),
+  );
+  // The default output profile omits the recorded output schemas.
+  expect(
+    before.tools.filter(({ outputSchema }) => outputSchema !== undefined),
+  ).toEqual([]);
+  const { prompts } = await client.listPrompts();
+  expect(prompts).toEqual(
+    PROMPT_CONTRACTS.map((prompt) => ({
+      name: prompt.name,
+      title: prompt.title,
+      description: prompt.description,
+      arguments: Object.entries(prompt.arguments).map(([name, argument]) => ({
+        name,
+        description: argument.description,
+        required: argument.required,
       })),
-    );
+    })),
+  );
 
-    expect(prompts).toEqual(
-      recorded.prompts.map(
-        ({ parameters: _parameters, ...prompt }: Record<string, unknown>) =>
-          prompt,
-      ),
-    );
-    // Discovery is checked in full above. Validate each called tool's actual
-    // schema without compiling unrelated outputs in every fresh SDK client.
-    const results = await Promise.all([
-      artifactMcpCall(client, { name: "list_unknowns", arguments: {} }),
-      artifactMcpCall(client, {
-        name: "list_unknowns",
-        arguments: { limit: 1 },
-      }),
-    ]);
-    expect(results.every((result) => result.isError !== true)).toBe(true);
-    expect(results.map((result) => result.structuredContent)).toEqual([
-      { result: { items: [], total: 0, offset: 0, next_offset: null } },
-      { result: { items: [], total: 0, offset: 0, next_offset: null } },
-    ]);
-    expect(await client.listTools()).toEqual(before);
-    const invalid = await artifactMcpCall(client, {
+  expect(prompts).toEqual(
+    recorded.prompts.map(
+      ({ parameters: _parameters, ...prompt }: Record<string, unknown>) =>
+        prompt,
+    ),
+  );
+  // Discovery is checked in full above. Validate each called tool's actual
+  // schema without compiling unrelated outputs in every fresh SDK client.
+  const results = await Promise.all([
+    artifactMcpCall(client, { name: "list_unknowns", arguments: {} }),
+    artifactMcpCall(client, {
       name: "list_unknowns",
-      arguments: { limit: 1.5 },
-    });
-    expect(invalid.isError).toBe(true);
-    expect(invalid._meta?.provenance).toEqual({
-      untrusted_content: true,
-      source: "analysis_target",
-    });
-    expect(client.getProtocolEra()).toBe(mode === "auto" ? "modern" : "legacy");
-    if (mode === "auto")
-      expect(invalid._meta?.["io.modelcontextprotocol/serverInfo"]).toEqual(
-        recorded.info,
-      );
-    expect(stderr()).toBe("");
-  },
-);
+      arguments: { limit: 1 },
+    }),
+  ]);
+  expect(results.every((result) => result.isError !== true)).toBe(true);
+  expect(results.map((result) => result.structuredContent)).toEqual([
+    { result: { items: [], total: 0, offset: 0, next_offset: null } },
+    { result: { items: [], total: 0, offset: 0, next_offset: null } },
+  ]);
+  expect(await client.listTools()).toEqual(before);
+  const invalid = await artifactMcpCall(client, {
+    name: "list_unknowns",
+    arguments: { limit: 1.5 },
+  });
+  expect(invalid.isError).toBe(true);
+  expect(invalid._meta?.provenance).toEqual({
+    untrusted_content: true,
+    source: "analysis_target",
+  });
+  expect(client.getProtocolEra()).toBe("modern");
+  expect(invalid._meta?.["io.modelcontextprotocol/serverInfo"]).toEqual(
+    recorded.info,
+  );
+  expect(stderr()).toBe("");
+});
 
-it.each(["legacy", "auto"] as const)(
-  "validates non-object-root guidance results from deferred startup over %s",
-  async (mode) => {
-    const { client, stderr } = await connect(mode);
-    const before = await client.listTools();
-    const unwrap = (value: unknown) =>
-      typeof value === "object" && value !== null && "result" in value
-        ? value.result
-        : value;
-    const found = await client.callTool({
-      name: "search_guidance",
-      arguments: { query: "exact JavaScript module", limit: 1 },
-    });
-    expect(found.isError).not.toBe(true);
-    const matches = searchGuidanceOutputSchema.parse(
-      unwrap(found.structuredContent),
-    );
-    if (matches.status !== "matches") throw new Error("Expected guide matches");
-    const read = await client.callTool({
-      name: "read_guidance_section",
-      arguments: { locator: matches.matches[0]?.locator },
-    });
-    expect(read.isError).not.toBe(true);
-    expect(
-      readGuidanceSectionOutputSchema.parse(unwrap(read.structuredContent))
-        .status,
-    ).toBe("section");
-    expect(await client.listTools()).toEqual(before);
-    expect(stderr()).toBe("");
-  },
-);
+it("validates non-object-root guidance results from deferred startup", async () => {
+  const { client, stderr } = await connect("auto");
+  const before = await client.listTools();
+  const unwrap = (value: unknown) =>
+    typeof value === "object" && value !== null && "result" in value
+      ? value.result
+      : value;
+  const found = await client.callTool({
+    name: "search_guidance",
+    arguments: { query: "exact JavaScript module", limit: 1 },
+  });
+  expect(found.isError).not.toBe(true);
+  const matches = searchGuidanceOutputSchema.parse(
+    unwrap(found.structuredContent),
+  );
+  if (matches.status !== "matches") throw new Error("Expected guide matches");
+  const read = await client.callTool({
+    name: "read_guidance_section",
+    arguments: { locator: matches.matches[0]?.locator },
+  });
+  expect(read.isError).not.toBe(true);
+  expect(
+    readGuidanceSectionOutputSchema.parse(unwrap(read.structuredContent))
+      .status,
+  ).toBe("section");
+  expect(await client.listTools()).toEqual(before);
+  expect(stderr()).toBe("");
+});
 
 it("preserves connection creation time across deferred materialization", async () => {
   const directory = await createTestTempDirectory("rea-mcp-started-at-");
@@ -571,7 +546,7 @@ globalThis.Date = class extends NativeDate {
   }
 };
 `)}`;
-  const { client } = await connect("legacy", {}, [`--import=${hook}`]);
+  const { client } = await connect("auto", {}, [`--import=${hook}`]);
   await client.listTools();
   await writeFile(clock, "2021-01-01T00:00:00.000Z");
   const first = await artifactMcpCall(client, {
@@ -960,7 +935,7 @@ console.log(JSON.stringify({
 );
 
 it("runs the real static artifact workflow after deferred initialization", async () => {
-  const { client } = await connect("legacy");
+  const { client } = await connect("auto");
   const opened = await client.callTool({
     name: "open_binary",
     arguments: { path: resolve("scripts/rea.mjs") },

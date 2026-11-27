@@ -20,7 +20,7 @@ it("keeps the shared owner's real MCP connection open across an unrelated comman
     await withArtifactMcp(
       target,
       async (client) => {
-        await client.ping();
+        await client.listTools();
         expect(
           (
             await commands.exec(
@@ -32,7 +32,7 @@ it("keeps the shared owner's real MCP connection open across an unrelated comman
         ).toBe("ok");
         // The helper adopted this exact transport before entering the callback.
         // A new protocol request must still work after command supervision.
-        await client.ping();
+        await client.listTools();
       },
       { commands },
     );

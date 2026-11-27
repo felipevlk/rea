@@ -41,7 +41,10 @@ describe("per-request client capability reporting", () => {
       const server = createServer({ kind: "session", session });
       const client = new Client(
         { name: "capabilities-test", version: "1" },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+        {
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+          jsonSchemaValidator: createMcpSchemaValidation(),
+        },
       );
       const [clientTransport, serverTransport] =
         InMemoryTransport.createLinkedPair();
@@ -83,7 +86,11 @@ describe("initialize-scoped client metadata", () => {
     const server = createServer({ kind: "session", session });
     const client = new Client(
       { name: "initialize-test", version: "2" },
-      { jsonSchemaValidator: createMcpSchemaValidation(), capabilities },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        capabilities,
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

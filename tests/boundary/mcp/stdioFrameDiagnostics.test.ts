@@ -43,7 +43,7 @@ workspaceCliTest.for([
     const client = new Client(
       { name: "frame-diagnostic-regression", version: "1" },
       {
-        versionNegotiation: { mode: "legacy" },
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
         jsonSchemaValidator: schemaValidation,
       },
     );
@@ -53,7 +53,7 @@ workspaceCliTest.for([
       // A valid ping is the processing barrier; rejected IDs need no timeout.
       for (const id of [Number.MAX_SAFE_INTEGER + 1, 1.5])
         await transport.send({ jsonrpc: "2.0", id, method: "ping" });
-      await client.ping();
+      await client.listTools();
 
       const definition = (await client.listTools()).tools.find(
         ({ name }) => name === "inspect_byte_entropy",
@@ -76,7 +76,7 @@ workspaceCliTest.for([
       );
       // Deferred materialization must not replace the outer diagnostic owner.
       await transport.send({ jsonrpc: "2.0", id: 2.5, method: "ping" });
-      await client.ping();
+      await client.listTools();
     } finally {
       await client.close();
       await transport.close();

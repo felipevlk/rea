@@ -39,7 +39,10 @@ const connect = async () => {
   );
   const client = new Client(
     { name: "environment-bundle-mcp", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

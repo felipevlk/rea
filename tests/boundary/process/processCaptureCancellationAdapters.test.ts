@@ -274,7 +274,10 @@ itWithCaptureCapability(
         name: "process-settlement-cancellation",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     let marker: Marker | undefined;
     onTestFinished(async () => {
@@ -319,7 +322,7 @@ itWithCaptureCapability(
     await expect(access(join(root, "late-write"))).rejects.toMatchObject({
       code: "ENOENT",
     });
-    await client.ping();
+    await client.listTools();
   },
   20_000,
 );

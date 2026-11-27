@@ -62,7 +62,10 @@ it.each([
     const server = createServer({ kind: "session", session });
     const client = new Client(
       { name: "bookmark-verifier", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -124,7 +127,10 @@ it.each([false, true])(
     const server = createServer({ kind: "session", session });
     const client = new Client(
       { name: "context-cleanup", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

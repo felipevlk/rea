@@ -87,7 +87,10 @@ it.each([
     );
     const client = new Client(
       { name: "batch-overflow-test", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     onTestFinished(async () => {
       await client.close();

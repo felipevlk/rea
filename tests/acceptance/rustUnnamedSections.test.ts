@@ -55,6 +55,6 @@ cliTest(
       expectCliMcpEvidenceParity(evidence, response.structuredContent, path);
       expect(Buffer.compare(await readFile(path), bytes)).toBe(0);
     }
-    await client.ping();
+    await client.listTools();
   },
 );

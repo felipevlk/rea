@@ -589,7 +589,10 @@ it("rejects unavailable retention, invalid selectors and cancellation before pro
   );
   const client = new Client(
     { name: "android-fixed-summary", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

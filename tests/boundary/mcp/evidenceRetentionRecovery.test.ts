@@ -51,7 +51,10 @@ it.each(["compact"] as const)(
     );
     const client = new Client(
       { name: "unretained-evidence", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [ct, st] = InMemoryTransport.createLinkedPair();
     try {
@@ -142,7 +145,10 @@ it("keeps an oversized unretained observation failure bounded and the connection
       name: "unretained-evidence-overflow",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   try {
@@ -232,7 +238,10 @@ it("bounds fallback when the retention error itself has oversized diagnostics", 
   );
   const client = new Client(
     { name: "retention-overflow", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   try {

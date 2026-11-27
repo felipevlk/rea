@@ -110,7 +110,10 @@ const callCurrentDocument = async (
   });
   const client = new Client(
     { name: "runtime-smoke", version: "1.0.0" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      jsonSchemaValidator: schemaValidation,
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
 
   let result: Awaited<ReturnType<Client["callTool"]>>;
@@ -205,7 +208,10 @@ describe("production stdio runtime", () => {
     });
     const client = new Client(
       { name: "catalog-runtime", version: "1.0.0" },
-      { jsonSchemaValidator: schemaValidation },
+      {
+        jsonSchemaValidator: schemaValidation,
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
 
     try {

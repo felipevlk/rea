@@ -95,7 +95,7 @@ process.exit(1);
         output.json,
         scenario.operation,
       );
-      await client.ping();
+      await client.listTools();
     }
     expect(await readFile(source, "utf8")).toBe("caller bytes");
   },

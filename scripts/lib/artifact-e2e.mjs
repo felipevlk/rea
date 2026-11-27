@@ -232,7 +232,10 @@ const withOpenedArtifactMcp = async (
   });
   owner.adopt(transport, "artifact MCP process");
   const client = completeEvidenceClient(
-    new Client({ name: "artifact-real-e2e", version: "1" }),
+    new Client(
+      { name: "artifact-real-e2e", version: "1" },
+      { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+    ),
   );
   let clientClose;
   const closeClient = () =>

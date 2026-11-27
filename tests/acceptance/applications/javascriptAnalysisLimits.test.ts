@@ -308,7 +308,7 @@ cliTest(
       [cliControlEvidence, false],
     ] as const)
       expectFileAnalysisApplicability(evidence, interrupted);
-    await client.ping();
+    await client.listTools();
   },
 );
 

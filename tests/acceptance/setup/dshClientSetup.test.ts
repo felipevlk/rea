@@ -331,7 +331,10 @@ async function verifyGeneratedLauncher(
   });
   const client = new Client(
     { name: "dsh-setup-lifecycle", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   try {
     await client.connect(transport);

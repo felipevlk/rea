@@ -435,7 +435,7 @@ it("runs built CLI and real stdio SDK with exact evidence parity, selection, ret
       error: { code: "unsupported_target" },
     });
   }
-  await client.ping();
+  await client.listTools();
   for (const record_ordinals of [[3], [0, 0]]) {
     expect(
       parseMcpToolError(
@@ -603,7 +603,7 @@ it("fails whole-capture validation before selection and survives malformed, unsu
     },
   });
   await writeFile(path, qlog([event]));
-  await client.ping();
+  await client.listTools();
   await expectRecoveredCapture(call, path);
 });
 
@@ -644,7 +644,7 @@ runtimeTest.skipIf(
       stdout: expect.stringContaining('"code":"resource_constraint"'),
     });
     await writeFile(path, qlog([event]));
-    await client.ping();
+    await client.listTools();
     await expectRecoveredCapture(call, path);
   },
 );

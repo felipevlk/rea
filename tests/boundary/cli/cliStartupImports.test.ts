@@ -472,7 +472,10 @@ describe("MCP startup imports", () => {
     });
     const client = new Client(
       { name: "rea-startup-imports", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     try {
       await client.connect(transport);

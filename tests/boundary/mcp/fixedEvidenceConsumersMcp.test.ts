@@ -154,7 +154,10 @@ const server = createServer(
 );
 const client = new Client(
   { name: "fixed-evidence-fixtures", version: "1" },
-  { jsonSchemaValidator: createMcpSchemaValidation() },
+  {
+    versionNegotiation: { mode: { pin: "2026-07-28" } },
+    jsonSchemaValidator: createMcpSchemaValidation(),
+  },
 );
 
 beforeAll(async () => {
@@ -324,7 +327,7 @@ it.each([
         },
       },
     });
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -342,5 +345,5 @@ it("keeps the default input admission before fixed-server source decoding", asyn
       details: { reported_limits: { max_input_elements: 1_024 } },
     },
   });
-  await client.ping();
+  await client.listTools();
 });

@@ -207,7 +207,10 @@ const connectedFixture = async () => {
   );
   const client = new Client(
     { name: "frida-lifecycle", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     native.controls.detachFailures = 0;
@@ -802,7 +805,10 @@ const callPartialFridaLoadError = async (
       name: "frida-partial-probe-client",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

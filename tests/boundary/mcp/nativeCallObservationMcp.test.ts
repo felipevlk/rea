@@ -116,7 +116,10 @@ it("routes observe_native_calls through MCP with schema-checked input and output
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "native-calls-mcp-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -319,7 +322,10 @@ it.each([
         name: "native-calls-partial-mcp-test",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

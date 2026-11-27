@@ -106,7 +106,10 @@ exit 1
         onTestFinished(() => server.close());
         const client = new Client(
           { name: "adb-properties", version: "1" },
-          { jsonSchemaValidator: createMcpSchemaValidation() },
+          {
+            jsonSchemaValidator: createMcpSchemaValidation(),
+            versionNegotiation: { mode: { pin: "2026-07-28" } },
+          },
         );
         onTestFinished(() => client.close());
         const [clientTransport, serverTransport] =

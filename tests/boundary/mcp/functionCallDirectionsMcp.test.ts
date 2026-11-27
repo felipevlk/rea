@@ -49,7 +49,10 @@ it.each(profiles)("preserves directional gaps (%s)", async (profile) => {
   );
   const client = new Client(
     { name: "function-call-directions", version: "1" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: schemaValidation,
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

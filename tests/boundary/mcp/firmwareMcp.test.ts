@@ -23,7 +23,10 @@ it("executes named firmware contracts with inline Evidence and no native binary 
   );
   const client = new Client(
     { name: "firmware-regression", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

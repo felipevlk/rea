@@ -73,7 +73,10 @@ it.each([
       name: "call-path-coordinate-identity",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -163,7 +166,10 @@ it("publishes explored extent without the terminal goal's callees", async () => 
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "call-path-search-extent", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -226,7 +232,10 @@ it("preserves unresolved outgoing call caveats and bounds search completeness at
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "unresolved-call-path", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -310,7 +319,10 @@ it("records an explicit max_paths preference and keeps omission distinct", async
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "call-path-max-paths", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

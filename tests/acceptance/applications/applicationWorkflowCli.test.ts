@@ -61,7 +61,10 @@ const mcpClient = new Client(
     name: "application-workflow-parity",
     version: "1",
   },
-  { jsonSchemaValidator: createMcpSchemaValidation() },
+  {
+    jsonSchemaValidator: createMcpSchemaValidation(),
+    versionNegotiation: { mode: { pin: "2026-07-28" } },
+  },
 );
 let mcpConnection: Promise<void> | undefined;
 const connectedMcpClient = async (): Promise<Client> => {

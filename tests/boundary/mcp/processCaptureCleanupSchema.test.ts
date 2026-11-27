@@ -29,7 +29,10 @@ it.each(["compact"] as const)(
     );
     const client = new Client(
       { name: "capture-cleanup-schema", version: "1" },
-      { jsonSchemaValidator: validation },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: validation,
+      },
     );
     onTestFinished(async () => {
       await client.close();

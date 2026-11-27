@@ -84,7 +84,10 @@ it.runIf(SQLITE_NATIVE_LIMITS_AVAILABLE)(
     );
     const client = new Client(
       { name: "sqlite-admission", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -175,7 +178,10 @@ it.runIf(SQLITE_NATIVE_LIMITS_AVAILABLE)(
         name: "sqlite-retained-observation",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -413,7 +419,10 @@ it("closes the bound Go, IL2CPP and web-capture services and retries failed shut
   );
   const client = new Client(
     { name: "bound-service-lifecycle", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

@@ -48,7 +48,10 @@ const observe = async (
   const server = rizinDebugMcpServer("rizin-output-test", manager);
   const client = new Client(
     { name: "rizin-output-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

@@ -268,7 +268,10 @@ it("refuses summary delivery before calling a fixed provider without retention",
   );
   const client = new Client(
     { name: "pseudocode-no-retention", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(() =>
     closeVerifierResources([() => client.close(), () => server.close()]),
@@ -320,5 +323,5 @@ it("keeps transport-overflow recovery usable for the original pseudocode observa
     session.evidenceById(result.parent_evidence_id)?.normalized_result,
   ).toBe(text);
   expect(calls).toEqual(["procedure_pseudo_code"]);
-  await mcp.ping();
+  await mcp.listTools();
 });

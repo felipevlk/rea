@@ -96,7 +96,10 @@ const callCaptureFailure = async (failure: ProcessCaptureError) => {
   );
   const client = new Client(
     { name: "process-partial-capture-client", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

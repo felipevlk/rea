@@ -170,7 +170,7 @@ ${body}
       );
       expect(retained.evidence_id).toBe(partialReference.evidence_id);
       expect(retained.normalized_result).toMatchObject(expected);
-      await client.ping();
+      await client.listTools();
     } finally {
       await client.close();
     }

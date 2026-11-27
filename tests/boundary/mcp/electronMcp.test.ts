@@ -41,7 +41,10 @@ import { createMcpSchemaValidation } from "../../fixtures/mcpSchemaValidation.js
 const testClient = (name: string) =>
   new Client(
     { name, version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
 
 const browsers: FakeCdpBrowser[] = [];
@@ -187,7 +190,9 @@ it("records completed Electron facts after final detach as server Evidence", asy
       expect.stringContaining("closed its CDP transport"),
     ]),
   });
-  await expect(client.ping()).resolves.toEqual({});
+  await expect(client.listTools()).resolves.toMatchObject({
+    tools: expect.any(Array),
+  });
 });
 
 it("lets MCP JavaScript analysis continue only with recorded untrusted ASAR bytes", async () => {
@@ -247,7 +252,10 @@ it("advertises owned JavaScript analysis effects without foreign target executio
       name: "javascript-analysis-effects",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -639,7 +647,10 @@ it("exposes the target-free static JavaScript application workflow", async () =>
       name: "electron-static-mcp-test",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -744,7 +755,10 @@ it.skipIf(process.platform === "win32")(
         name: "application-source-admission",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -787,7 +801,7 @@ it.skipIf(process.platform === "win32")(
       ).root_artifact_sha256,
     );
     expect(initialEvidence.subject?.local_path).toBe(join(root, "app"));
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -841,7 +855,7 @@ it("reports every unresolved Electron path without starting a provider", async (
     },
   });
   expect(capture).not.toHaveBeenCalled();
-  await client.ping();
+  await client.listTools();
 });
 
 it("refuses an Electron wait longer than Node can schedule", async () => {
@@ -872,7 +886,7 @@ it("refuses an Electron wait longer than Node can schedule", async () => {
     },
   });
   expect(capture).not.toHaveBeenCalled();
-  await client.ping();
+  await client.listTools();
 });
 
 it.skipIf(process.platform === "win32")(

@@ -81,7 +81,10 @@ const connect = async (
   );
   const client = new Client(
     { name: "process-comparison-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await Promise.allSettled([client.close(), server.close(), session.close()]);
@@ -232,7 +235,7 @@ it.each([
     expect(parseMcpToolError(response)).toMatchObject({
       error: { code: "invalid_request", details: { issues: [issue] } },
     });
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -450,7 +453,7 @@ it("rejects a deep trace cycle as an input error through CLI and MCP", async () 
   expect(response.content).toEqual([
     { type: "text", text: expect.stringContaining(issue.message) },
   ]);
-  await client.ping();
+  await client.listTools();
 });
 
 it("names the side and constraint when Evidence is not a usable capture", async () => {

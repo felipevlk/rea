@@ -156,7 +156,7 @@ describe("declared trace adapter parity", () => {
       .join("\n");
     expect(text).toContain(message);
     expect(text.match(/first undeclared pair/g)).toHaveLength(1);
-    await client.ping();
+    await client.listTools();
   });
 
   it("rejects a variant that only reorders unordered members through CLI and MCP", async () => {

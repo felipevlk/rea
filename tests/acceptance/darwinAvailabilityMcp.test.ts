@@ -34,7 +34,10 @@ cliTest.skipIf(process.platform !== "darwin")(
     transport.stderr?.on("data", () => undefined);
     const client = new Client(
       { name: "darwin-availability", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     try {
       await client.connect(transport);
@@ -92,7 +95,9 @@ cliTest.skipIf(process.platform !== "darwin")(
           },
         },
       });
-      await expect(client.ping()).resolves.toEqual({});
+      await expect(client.listTools()).resolves.toMatchObject({
+        tools: expect.any(Array),
+      });
     } finally {
       await client.close();
       await transport.close();

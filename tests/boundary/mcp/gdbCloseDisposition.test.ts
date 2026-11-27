@@ -60,7 +60,10 @@ createInterface({ input: process.stdin }).on('line', line => {
     onTestFinished(() => server.close());
     const client = new Client(
       { name: "gdb-disposition-test", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     onTestFinished(() => client.close());
     const [clientTransport, serverTransport] =

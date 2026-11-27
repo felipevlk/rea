@@ -56,7 +56,10 @@ it("retains completed Android Evidence through the MCP cancellation delivery pat
   );
   const client = new Client(
     { name: "android-late-completion", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -111,5 +114,7 @@ it("retains completed Android Evidence through the MCP cancellation delivery pat
     parameters: control.parameters,
     confidence: control.confidence,
   });
-  await expect(client.ping()).resolves.toEqual({});
+  await expect(client.listTools()).resolves.toMatchObject({
+    tools: expect.any(Array),
+  });
 });

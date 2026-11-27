@@ -230,7 +230,10 @@ function publicTrace(plan: Plan, maxNodes = 12, maxEdges = 500) {
   const server = createServer({ kind: "fixed", analysis });
   const client = new Client(
     { name: "native-ui-partial-routes", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

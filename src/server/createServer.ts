@@ -71,6 +71,7 @@ import {
   COMPACT_INPUT_SCHEMA_PRESENTATION,
 } from "../contracts/mcpSchemaPresentation.js";
 import { errorMessage } from "../kernel/errorMessage.js";
+import { DEFAULT_SUPPORTED_PROTOCOL_VERSIONS } from "./protocolVersions.js";
 
 export interface CreateServerOptions extends CapabilityServiceOptions {
   readonly analysisSettings?: AnalysisSettings;
@@ -92,6 +93,11 @@ export interface CreateServerOptions extends CapabilityServiceOptions {
    * running host; tests select another host here.
    */
   readonly host?: HostPlatform;
+  /**
+   * Revisions this server instance negotiates. Production transports pass
+   * `MODERN_PROTOCOL_VERSIONS`; embedded callers keep the SDK-era defaults.
+   */
+  readonly supportedProtocolVersions?: readonly string[];
 }
 
 const createMcpServer = (
@@ -102,6 +108,7 @@ const createMcpServer = (
   advertisedToolFamilies: ReadonlySet<string> | undefined,
   inputElementBudget: string | undefined,
   toolsListPageBudget: string | undefined,
+  supportedProtocolVersions: readonly string[],
 ): EvidenceMcpServer => {
   const configured = parseMcpInputBudget(inputElementBudget);
   if (!configured.ok) throw configured.error;
@@ -115,7 +122,7 @@ const createMcpServer = (
     {
       capabilities: {},
       maxToolInputElements: configured.value,
-      supportedProtocolVersions: ["2026-07-28"],
+      supportedProtocolVersions: [...supportedProtocolVersions],
       instructions: serverInstructions(session !== undefined, (tool) =>
         isToolFamilyAdvertised(advertisedToolFamilies, toolFamilyId(tool)),
       ),
@@ -258,6 +265,7 @@ export const createServer = (
       advertisedToolFamilies,
       environment.REA_MCP_MAX_INPUT_ELEMENTS,
       environment.REA_MCP_TOOLS_LIST_PAGE_BYTES,
+      options.supportedProtocolVersions ?? DEFAULT_SUPPORTED_PROTOCOL_VERSIONS,
     );
   server.analysisSettings = analysisSettings;
   if (options.mcpServer !== undefined) {

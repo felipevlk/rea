@@ -139,7 +139,9 @@ it("shares one concurrent close attempt and does not reclose released SDK object
   let second: Promise<void> | undefined;
   try {
     const client = await fixture.mcp.connect(server);
-    await expect(client.ping()).resolves.toEqual({});
+    await expect(client.listTools()).resolves.toMatchObject({
+      tools: expect.any(Array),
+    });
     const close = server.close.bind(server);
     const serverClose = vi
       .spyOn(server, "close")
@@ -293,8 +295,12 @@ it("attempts every SDK owner, reports all close failures and retries only unreso
   try {
     const firstClient = await fixture.mcp.connect(firstServer);
     const secondClient = await fixture.mcp.connect(secondServer);
-    await expect(firstClient.ping()).resolves.toEqual({});
-    await expect(secondClient.ping()).resolves.toEqual({});
+    await expect(firstClient.listTools()).resolves.toMatchObject({
+      tools: expect.any(Array),
+    });
+    await expect(secondClient.listTools()).resolves.toMatchObject({
+      tools: expect.any(Array),
+    });
     const closeClient = firstClient.close.bind(firstClient);
     const closeServer = firstServer.close.bind(firstServer);
     const firstClientClose = vi.fn(async () => {

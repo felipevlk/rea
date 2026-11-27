@@ -104,7 +104,10 @@ const status = async (client, options) => {
 };
 
 async function reconnect() {
-  const client = new Client({ name: "artifact-binding-probe", version: "1" });
+  const client = new Client(
+    { name: "artifact-binding-probe", version: "1" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
   for (const warmReuse of [true, false]) {
     const transport = await createOwnedMcpStdioTransport({
       command: process.execPath,

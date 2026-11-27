@@ -83,7 +83,10 @@ it.each([0, 1])(
     );
     const mcp = new Client(
       { name: "ghidra-shared-startup", version: "1.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

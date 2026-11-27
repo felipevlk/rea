@@ -171,7 +171,7 @@ cliTest.skipIf(process.platform !== "darwin")(
       });
     }
     expect(Buffer.compare(await readFile(target), bytes)).toBe(0);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -304,7 +304,7 @@ cliTest.skipIf(process.platform !== "darwin")(
     expect(reobserved.isError, JSON.stringify(reobserved)).not.toBe(true);
     expect(parseEvidence(reobserved.structuredContent)).toEqual(mcpEvidence);
     expect(Buffer.compare(await readFile(target), Buffer.from(bytes))).toBe(0);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -389,6 +389,6 @@ cliTest.skipIf(process.platform !== "darwin")(
     expect(
       parseEvidence(inspected.structuredContent).normalized_result,
     ).toMatchObject(expected);
-    await client.ping();
+    await client.listTools();
   },
 );

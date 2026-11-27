@@ -36,7 +36,10 @@ it("validates source-location delivery and retains Evidence without a binary tar
   );
   const client = new Client(
     { name: "source-location-contract", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

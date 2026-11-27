@@ -35,7 +35,10 @@ const createSelectionClient = () => {
       name: "javascript-source-selection",
       version: "1",
     },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      jsonSchemaValidator: schemaValidation,
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -234,7 +237,7 @@ it("advertises exact source selection and retains its scope through summary, Evi
           },
         },
       });
-      await client.ping();
+      await client.listTools();
     }
     const next = await client.callTool({
       name: "analyze_javascript_application",
@@ -250,7 +253,7 @@ it("advertises exact source selection and retains its scope through summary, Evi
         parseEvidence(next.structuredContent).normalized_result,
       ).statistics.parsed_javascript_files,
     ).toBe(1);
-    await client.ping();
+    await client.listTools();
   } finally {
     await closeVerifierResources([
       () => client.close(),
@@ -326,7 +329,7 @@ it("selects nested ASAR paths and distinguishes missing inventoried bytes from i
         details: { reason: "unavailable" },
       },
     });
-    await client.ping();
+    await client.listTools();
   } finally {
     await closeVerifierResources([
       () => client.close(),
@@ -410,7 +413,7 @@ it("does not parse ASAR-looking JSON beyond the declared JSON extent through MCP
         details: { path: archive, failure_kind: "unsupported" },
       },
     });
-    await client.ping();
+    await client.listTools();
   } finally {
     await closeVerifierResources([
       () => client.close(),

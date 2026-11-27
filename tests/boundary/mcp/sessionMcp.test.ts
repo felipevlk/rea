@@ -207,7 +207,10 @@ describe("public provider availability", () => {
         name: "provider-host-readiness",
         version: "1.0.0",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -275,7 +278,10 @@ describe("owned-process prerequisite during status discovery", () => {
       );
       const mcp = new Client(
         { name: "ps-prerequisite", version: "1.0.0" },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+        {
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+          jsonSchemaValidator: createMcpSchemaValidation(),
+        },
       );
       const [clientTransport, serverTransport] =
         InMemoryTransport.createLinkedPair();
@@ -361,7 +367,10 @@ describe("target-free MCP lifecycle", () => {
     );
     const mcp = new Client(
       { name: "status-readiness", version: "1.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -408,7 +417,10 @@ describe("target-free MCP lifecycle", () => {
     );
     const mcp = new Client(
       { name: "replaced-target", version: "1.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

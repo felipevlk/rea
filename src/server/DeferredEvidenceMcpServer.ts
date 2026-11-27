@@ -20,6 +20,7 @@ import { SERVER_START_FAILED } from "./serverStartFailure.js";
 import { OwnerCancellation } from "../domain/analysisErrorCore.js";
 import { isToolFamilyAdvertised } from "../contracts/toolFamilyIds.js";
 import { serverInstructions } from "./serverInstructions.js";
+import { DEFAULT_SUPPORTED_PROTOCOL_VERSIONS } from "./protocolVersions.js";
 
 type ToolConfig = StandardToolRegistration;
 type InputCallback = ToolCallback<StandardSchemaWithJSON>;
@@ -78,6 +79,7 @@ export class DeferredEvidenceMcpServer extends EvidenceMcpServerCore {
       readonly toolFamilies?: ReadonlySet<string> | undefined;
       /** Serve build-recorded compact output advertisements instead of omitting outputs. */
       readonly outputProfile?: "off" | "compact" | undefined;
+      readonly supportedProtocolVersions?: readonly string[] | undefined;
     } = {},
   ) {
     const families = options.toolFamilies;
@@ -100,6 +102,10 @@ export class DeferredEvidenceMcpServer extends EvidenceMcpServerCore {
         ...(options.maximumInputElements === undefined
           ? {}
           : { maxToolInputElements: options.maximumInputElements }),
+        supportedProtocolVersions: [
+          ...(options.supportedProtocolVersions ??
+            DEFAULT_SUPPORTED_PROTOCOL_VERSIONS),
+        ],
       },
       undefined,
       delivery,

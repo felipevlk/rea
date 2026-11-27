@@ -25,6 +25,7 @@ export const connectFixtureClient = async (
 ): Promise<Client> => {
   const client = new Client(identity, {
     jsonSchemaValidator: createMcpSchemaValidation(),
+    versionNegotiation: { mode: "auto" },
   });
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -117,7 +118,10 @@ export const createTestMcp = (): TestMcp => {
         jsonSchemaValidator = validation;
       }
       const client = applyCompleteEvidenceByDefault(
-        new Client(identity, { jsonSchemaValidator }),
+        new Client(identity, {
+          jsonSchemaValidator,
+          versionNegotiation: { mode: "auto" },
+        }),
         delivery,
       );
       const [clientTransport, serverTransport] =

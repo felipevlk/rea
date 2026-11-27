@@ -152,7 +152,10 @@ const connectFridaTestClient = async (
 ): Promise<Client> => {
   const client = new Client(
     { name, version: "1" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: schemaValidation,
+    },
   );
   onTestFinished(async () => {
     await client.close();
@@ -641,7 +644,10 @@ it("reports Frida tools as unavailable after the optional binding fails to load"
   );
   const client = new Client(
     { name: "frida-optional-binding", version: "1" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: schemaValidation,
+    },
   );
   onTestFinished(async () => {
     await client.close();
@@ -731,7 +737,10 @@ it("retains cancellation Evidence after the MCP client stops waiting", async () 
   );
   const client = new Client(
     { name: "frida-cancellation", version: "1" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: schemaValidation,
+    },
   );
   const controller = new AbortController();
   onTestFinished(async () => {
@@ -764,7 +773,7 @@ it("retains cancellation Evidence after the MCP client stops waiting", async () 
   scriptLoad.release();
   await expect(call).rejects.toThrow("cancel Frida observation");
   await sessionClosed;
-  await client.ping();
+  await client.listTools();
 
   const bundle = await client.callTool({
     name: "get_evidence_bundle",

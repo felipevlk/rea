@@ -124,7 +124,10 @@ test("preserves Harmony archive formats through the public CLI/MCP lifecycle", a
   };
   const client = new Client(
     { name: "rea-harmony-acceptance", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   const transport = new StdioClientTransport({
     command: process.execPath,

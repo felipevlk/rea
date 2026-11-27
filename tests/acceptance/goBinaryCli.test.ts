@@ -81,7 +81,7 @@ cliTest(
         expect(parseMcpToolError(response).error).toMatchObject(expected);
       }
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -200,7 +200,7 @@ cliTest(
         });
       }
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -287,7 +287,7 @@ cliTest(
     const { client, call } = await connectLocalToolsMcp();
     const response = await call("inspect_go_binary", { path });
     expect(parseMcpToolError(response).error).toMatchObject(expected);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -313,7 +313,7 @@ cliTest(
       expectCliMcpEvidenceParity(evidence, response.structuredContent, path);
     }
     expect(infos[1]).toEqual(infos[0]);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -353,7 +353,7 @@ cliTest(
     const response = await call("inspect_go_binary", { path });
     expect(response.isError, JSON.stringify(response)).not.toBe(true);
     expectCliMcpEvidenceParity(evidence, response.structuredContent, path);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -406,7 +406,7 @@ cliTest(
       expect(response.isError, JSON.stringify(response)).not.toBe(true);
       expectCliMcpEvidenceParity(evidence, response.structuredContent, path);
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -770,6 +770,6 @@ cliTest(
     });
     expect(mcpReply.isError, JSON.stringify(mcpReply)).not.toBe(true);
     expectCliMcpEvidenceParity(evidence, mcpReply.structuredContent, path);
-    await client.ping();
+    await client.listTools();
   },
 );

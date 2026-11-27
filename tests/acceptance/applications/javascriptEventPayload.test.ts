@@ -139,7 +139,7 @@ cliTest(
         .filter((node) => listenerIds.has(node.node_id))
         .map((node) => node.properties.event_name),
     ).toEqual(listeners.map(() => name));
-    await client.ping();
+    await client.listTools();
   },
 );
 

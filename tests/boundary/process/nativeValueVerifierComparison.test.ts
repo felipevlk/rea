@@ -44,7 +44,7 @@ processTest.for([
         args: [${JSON.stringify(fileURLToPath(new URL("../../../scripts/rea.mjs", import.meta.url)))}, "mcp"],
         env: { PATH: process.env.PATH ?? "", REA_LOG_LEVEL: "silent",
           HOPPER_LAUNCHER_PATH: "/rea-unconfigured-deep-provider/hopper" }, stderr: "pipe" });
-      const client = new Client({ name: "synthetic-verifier-comparison", version: "1" });
+      const client = new Client({ name: "synthetic-verifier-comparison", version: "1" }, { versionNegotiation: { mode: { pin: "2026-07-28" } } });
       try {
         await client.connect(transport);
         const imported = await client.callTool({ name: "import_evidence_bundle",

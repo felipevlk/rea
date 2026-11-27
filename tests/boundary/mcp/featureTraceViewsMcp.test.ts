@@ -373,7 +373,10 @@ it("refuses a selected view before tracing when the server retains no Evidence",
   const server = createServer({ kind: "fixed", analysis: session });
   const client = new Client(
     { name: "feature-trace-fixed", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

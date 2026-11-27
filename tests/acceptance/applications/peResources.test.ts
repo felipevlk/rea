@@ -560,6 +560,6 @@ cliTest(
     expect(
       contract.outputSchema.safeParse(rejected.structuredContent).success,
     ).toBe(false);
-    await client.ping();
+    await client.listTools();
   },
 );

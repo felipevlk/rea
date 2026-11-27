@@ -119,7 +119,10 @@ it("keeps a batch cleanup owner and its completed prefix after source retention 
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "batch-owned-cleanup", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   try {

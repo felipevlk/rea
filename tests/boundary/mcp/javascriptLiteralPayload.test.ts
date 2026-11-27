@@ -161,6 +161,6 @@ cliTest(
         .map((node) => node.node_id)
         .sort(compareUnicodeCodePoints),
     );
-    await client.ping();
+    await client.listTools();
   },
 );

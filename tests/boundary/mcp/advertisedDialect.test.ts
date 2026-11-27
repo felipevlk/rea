@@ -143,7 +143,10 @@ const listTools = async (environment: Readonly<NodeJS.ProcessEnv>) => {
   );
   const client = new Client(
     { name: "advertised-dialect", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

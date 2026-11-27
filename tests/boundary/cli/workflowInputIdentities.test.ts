@@ -67,7 +67,10 @@ const connectMcp = async (root: string) => {
       name: "application-input-identities",
       version: "1",
     },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      jsonSchemaValidator: schemaValidation,
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -454,8 +457,8 @@ cliTest(
         })
       ).isError,
     ).not.toBe(true);
-    await client.ping();
+    await client.listTools();
     expect((await call("close_binary")).isError).not.toBe(true);
-    await client.ping();
+    await client.listTools();
   },
 );

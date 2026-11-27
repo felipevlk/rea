@@ -170,7 +170,10 @@ cliTest.skipIf(process.platform === "win32").for([
     });
     const client = new Client(
       { name: "persistent-launcher", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     try {
       await client.connect(transport);
@@ -303,7 +306,10 @@ cliTest.skipIf(process.platform === "win32")(
     });
     const client = new Client(
       { name: "setup-interpreter", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     try {
       await client.connect(transport);

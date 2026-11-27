@@ -91,6 +91,6 @@ cliTest(
       expect(mcpFailure.isError).toBe(true);
       expect(mcpFailure.structuredContent).toBeUndefined();
     }
-    await client.ping();
+    await client.listTools();
   },
 );

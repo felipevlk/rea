@@ -321,7 +321,7 @@ const verifyRecovery = async (
   nextRoot: string,
   diagnostics: () => string,
 ): Promise<void> => {
-  await client.ping();
+  await client.listTools();
   const next = await client.callTool({
     name: "analyze_javascript_application",
     arguments: {
@@ -347,7 +347,7 @@ const verifyRecovery = async (
       },
     },
   });
-  await client.ping();
+  await client.listTools();
 };
 
 const createResourceClient = ({
@@ -355,7 +355,10 @@ const createResourceClient = ({
 }: { readonly parentHeapMb?: number } = {}) => {
   const client = new Client(
     { name: "javascript-resources", version: "1" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      jsonSchemaValidator: schemaValidation,
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   const transport = new StdioClientTransport({
     command: process.execPath,

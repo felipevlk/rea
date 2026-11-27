@@ -138,7 +138,7 @@ cliTest(
       source,
       sourcePath,
     });
-    await client.ping();
+    await client.listTools();
   },
 );
 

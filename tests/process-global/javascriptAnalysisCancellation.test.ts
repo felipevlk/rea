@@ -57,9 +57,9 @@ const createCancellationBoundary = (phase: string, message: string) => {
       }
     },
     acknowledge(client: Client) {
-      // Ordered in-memory messages make the ping acknowledge the cancellation
+      // Ordered in-memory messages make the listing acknowledge the cancellation
       // before the producer crosses the held boundary.
-      void client.ping().then(
+      void client.listTools().then(
         () => {
           acknowledgedCancellation = true;
           release();
@@ -177,7 +177,7 @@ it.each([
     // A rejected client promise alone does not prove that the server stopped.
     expect(await completed.promise).toBe("error");
     boundary.expectAcknowledged();
-    await client.ping();
+    await client.listTools();
     const bundle = await client.callTool({
       name: "get_evidence_bundle",
       arguments: {},
@@ -224,6 +224,6 @@ it.each([
       },
     });
     expect(next.isError, JSON.stringify(next)).not.toBe(true);
-    await client.ping();
+    await client.listTools();
   },
 );

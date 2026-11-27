@@ -69,7 +69,10 @@ export const connectBuildServer = async (
   );
   const client = new Client(
     { name: "build-computer-mcp", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   onTestFinished(async () => {
     await closeVerifierResources([

@@ -111,7 +111,10 @@ it("keeps the complete session unchanged after SDK import cancellation and permi
       name: "evidence-import-cancellation",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const controller = new AbortController();
   onTestFinished(async () => {
@@ -182,7 +185,7 @@ it("keeps the complete session unchanged after SDK import cancellation and permi
     );
   await dispatch.reached(cancellation, "import_evidence_bundle dispatch");
   // The real SDK ping completes while the dispatched file reader awaits I/O.
-  await client.ping();
+  await client.listTools();
   controller.abort(new Error("SDK import cancellation verification"));
   expect(await cancellation).toMatchObject({
     message: expect.stringContaining("SDK import cancellation verification"),
@@ -191,7 +194,7 @@ it("keeps the complete session unchanged after SDK import cancellation and permi
   await completed;
   expect(session.exportEvidenceBundle()).toEqual(before);
   expect(settledFailure).toBeInstanceOf(AnalysisCancelledError);
-  await client.ping();
+  await client.listTools();
   const retry = await client.callTool({
     name: "import_evidence_bundle",
     arguments: { path },
@@ -210,7 +213,7 @@ it("keeps the complete session unchanged after SDK import cancellation and permi
   expect(after.records).toEqual(
     expect.arrayContaining([...before.records, imported]),
   );
-  await client.ping();
+  await client.listTools();
 });
 
 it("retains a failed import close in the server scope through SDK error projection", async () => {
@@ -251,7 +254,10 @@ it("retains a failed import close in the server scope through SDK error projecti
       name: "evidence-import-close-failure",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     allowClose = true;
@@ -313,7 +319,10 @@ it("retries a transient import close failure before admitting the bundle", async
       name: "evidence-import-close-retry",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     close.mockRestore();
@@ -333,5 +342,5 @@ it("retries a transient import close failure before admitting the bundle", async
   close.mockRestore();
   expect(result.isError).not.toBe(true);
   expect(session.exportEvidenceBundle().records).toContainEqual(imported);
-  await client.ping();
+  await client.listTools();
 });

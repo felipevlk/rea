@@ -133,7 +133,10 @@ const client = new Client(
     name: "occurrence-completion-control",
     version: "1",
   },
-  { jsonSchemaValidator: createMcpSchemaValidation() },
+  {
+    jsonSchemaValidator: createMcpSchemaValidation(),
+    versionNegotiation: { mode: { pin: "2026-07-28" } },
+  },
 );
 const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 try {

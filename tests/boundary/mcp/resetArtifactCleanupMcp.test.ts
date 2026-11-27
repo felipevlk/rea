@@ -136,7 +136,7 @@ it("drains ordinary exports and refuses reset until their retained artifact owne
       arguments: {},
     });
     pending.push(resetting);
-    await client.ping();
+    await client.listTools();
     expect(cleanupAttempts).toBe(1);
     expect(session.immutableEvidenceBundle()).toEqual(before);
     ordinaryExportFinalCleanup.release();

@@ -39,7 +39,10 @@ it("rejects canonical-invalid output when output schema advertisements are off",
     InMemoryTransport.createLinkedPair();
   const client = new Client(
     { name: "schema-profile-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const contract = {
     ...toolContract("comment"),
@@ -88,7 +91,10 @@ it("strips nested guidance from compact output schemas and preserves result fiel
     InMemoryTransport.createLinkedPair();
   const client = new Client(
     { name: "compact-output-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const contract = {
     ...toolContract("comment"),
@@ -213,7 +219,10 @@ it("rejects canonical-invalid output that the reduced advertisement accepts", as
     InMemoryTransport.createLinkedPair();
   const client = new Client(
     { name: "reduced-output-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const contract = {
     ...toolContract("comment"),
@@ -333,7 +342,10 @@ it("omits output schemas by default and still delivers validated structured resu
   );
   const client = new Client(
     { name: "default-output-profile", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

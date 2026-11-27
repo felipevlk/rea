@@ -62,7 +62,10 @@ itWithCaptureCapability.each([
           name: "descendant-pid-normalization",
           version: "1",
         },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+        {
+          jsonSchemaValidator: createMcpSchemaValidation(),
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+        },
       );
       const connected = client;
       onTestFinished(async () => {
@@ -85,7 +88,7 @@ itWithCaptureCapability.each([
         });
         expect(response.isError, JSON.stringify(response)).not.toBe(true);
         evidence = parseEvidence(response.structuredContent);
-        await client.ping();
+        await client.listTools();
       } else {
         const { stdout } = await exec(
           process.execPath,

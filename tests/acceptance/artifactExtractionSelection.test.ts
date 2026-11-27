@@ -112,7 +112,10 @@ it("publishes the same selected occurrences through CLI and MCP and rejects inva
       name: "extraction-selection-test",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   const output = join(data.root, "mcp-output");
   await withVerifierCleanup(async () => {

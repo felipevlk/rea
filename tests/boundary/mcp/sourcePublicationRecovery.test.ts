@@ -262,7 +262,10 @@ it.each([
     const server = createServer({ kind: "session", session });
     const client = new Client(
       { name: "source-publication", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [ct, st] = InMemoryTransport.createLinkedPair();
     try {
@@ -362,7 +365,10 @@ it("reports omission when the primary cannot be safely authenticated", async () 
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "recovery-headroom", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   try {
@@ -433,7 +439,10 @@ it("accounts for a wide source ID list before constructing recovery Evidence", a
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "wide-recovery", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   try {
@@ -509,7 +518,10 @@ it.each(["compact"] as const)(
         name: "source-primary-headroom",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [ct, st] = InMemoryTransport.createLinkedPair();
     try {
@@ -577,7 +589,10 @@ it("accounts for source links before admitting a completed direct observation", 
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "wide-primary-admission", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   try {

@@ -20,7 +20,7 @@ describe.skipIf(process.platform === "win32")("rea mcp --http shutdown", () => {
         const started = await startMcpHttpProcess(processes);
         // The live transport refuses a GET that does not accept an event stream.
         const before = await rawHttpRequest(started.url);
-        expect(before.status).toBe(406);
+        expect(before.status).toBe(405);
         started.child.kill(signal);
         const [code, signalCode] = await once(started.child, "close");
         expect(code).toBe(status);

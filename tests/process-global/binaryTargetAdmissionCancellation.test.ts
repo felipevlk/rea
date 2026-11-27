@@ -378,7 +378,7 @@ it("settles SDK cancellation at the admission boundary and reuses the same MCP c
       (cause: unknown) => cause,
     );
   await firstStat;
-  await client.ping();
+  await client.listTools();
   controller.abort(new Error("SDK target cancellation"));
   expect(await request).toMatchObject({
     message: expect.stringContaining("SDK target cancellation"),
@@ -395,7 +395,7 @@ it("settles SDK cancellation at the admission boundary and reuses the same MCP c
   });
   expect(admission.handles[0]?.fd).toBe(-1);
   expect(createClient).not.toHaveBeenCalled();
-  await client.ping();
+  await client.listTools();
   const retry = await client.callTool({ name, arguments: args });
   expect(parseMcpToolError(retry)).toMatchObject({
     error: {
@@ -403,7 +403,7 @@ it("settles SDK cancellation at the admission boundary and reuses the same MCP c
       details: { constraint: "file_format_rejected" },
     },
   });
-  await client.ping();
+  await client.listTools();
   expect(await readFile(path, "utf8")).toBe("sample-bytes");
   expect(admission.handles.every((handle) => handle.fd === -1)).toBe(true);
 });

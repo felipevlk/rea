@@ -132,7 +132,10 @@ it.each(["normal", "copied", "parameters", "forged", "source"] as const)(
     );
     const client = new Client(
       { name: "reuse-control", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [ct, st] = InMemoryTransport.createLinkedPair();
     try {
@@ -187,7 +190,10 @@ it("preserves the selected path when reusing an identical observation for a diff
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "reused-subject", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   try {

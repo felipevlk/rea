@@ -5,6 +5,7 @@ import type { AndroidAnalysisPort } from "../ports/android/AndroidAnalysisPort.j
 import type { BinarySession } from "../application/binary/BinarySession.js";
 import type { Logger } from "pino";
 import { createServer } from "../server/createServer.js";
+import { MODERN_PROTOCOL_VERSIONS } from "../server/protocolVersions.js";
 import { StreamableHttpListenError } from "../server/http/streamableHttpListenError.js";
 import type { ToolResultDelivery } from "../server/ToolResultDelivery.js";
 import type { McpServerHandle, RuntimeDependencies } from "./types.js";
@@ -152,6 +153,7 @@ export const startMcpTransport = async (
               ...optionalProviders,
               optionalObservationProviderOwner: "caller",
               androidAnalysis: android,
+              supportedProtocolVersions: MODERN_PROTOCOL_VERSIONS,
             },
           );
           return server;

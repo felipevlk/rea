@@ -104,5 +104,5 @@ it("selects the retained JavaScript grammar and resolves exact imports through M
   expect(session.evidenceById(evidence.evidence_id)).toEqual(evidence);
   expect(await readFile(sourcePath, "utf8")).toBe(source);
   expect(await readFile(manifestPath, "utf8")).toBe(manifestText);
-  await client.ping();
+  await client.listTools();
 });

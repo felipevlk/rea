@@ -169,7 +169,10 @@ cliTest(
     });
     const client = new Client(
       { name: "setup-environment", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     try {
       await client.connect(transport);
@@ -184,7 +187,7 @@ cliTest(
           )
           .map(({ name }) => name),
       ).toEqual([]);
-      expect(await client.ping()).toEqual({});
+      expect((await client.listTools()).tools.length).toBeGreaterThan(0);
     } finally {
       await client.close();
       await transport.close();

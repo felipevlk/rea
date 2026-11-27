@@ -424,7 +424,10 @@ const withCoverageMcp = async <T>(
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "coverage-mcp-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

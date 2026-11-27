@@ -44,7 +44,10 @@ const capture = async (
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "truncation-coverage", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   onTestFinished(async () => {
     await client.close();
@@ -60,7 +63,7 @@ const capture = async (
     arguments: scenario,
   });
   expect(result.isError, JSON.stringify(result)).not.toBe(true);
-  await client.ping();
+  await client.listTools();
   return parseProcessCapture(
     parseEvidence(result.structuredContent).normalized_result,
   );

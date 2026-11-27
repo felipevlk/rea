@@ -136,7 +136,10 @@ for (const format of ["dotnet-bundle", "pyinstaller"] as const) {
         name: "rea-dotnet-bundle-acceptance",
         version: "1",
       },
-      { jsonSchemaValidator: schemaValidation },
+      {
+        jsonSchemaValidator: schemaValidation,
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     const transport = new StdioClientTransport({
       command: process.execPath,

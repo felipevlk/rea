@@ -28,7 +28,10 @@ it("applies the selected input allowance through the public deferred stdio entry
   transport.stderr?.on("data", () => undefined);
   const client = new Client(
     { name: "input-capacity-stdio", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   onTestFinished(async () => {
     try {
@@ -53,7 +56,7 @@ it("applies the selected input allowance through the public deferred stdio entry
     reported_limits: { max_input_elements: 8192 },
   });
   expect(Buffer.byteLength(JSON.stringify(result))).toBeLessThan(4096);
-  await client.ping();
+  await client.listTools();
   const healthy = await client.callTool({
     name: "inspect_analysis_settings",
     arguments: {},

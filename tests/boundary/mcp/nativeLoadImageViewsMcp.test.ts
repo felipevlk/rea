@@ -121,7 +121,10 @@ it("delivers load-image summaries from the complete retained public-tool observa
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "load-image-summary", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

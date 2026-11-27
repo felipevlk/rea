@@ -72,7 +72,10 @@ cliTest(
     transport.stderr?.on("data", () => undefined);
     const client = new Client(
       { name: "managed-type-recovery", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     try {
       await client.connect(transport);

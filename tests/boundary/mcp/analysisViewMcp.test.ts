@@ -583,7 +583,7 @@ it("discovers an oversized native dossier by exact metadata and reads its retain
       empty.structuredContent,
     ).result,
   ).toMatchObject({ matching_records: 0, records: [] });
-  await client.ping();
+  await client.listTools();
   const invalid = await client.callTool({
     name: "get_evidence_bundle",
     arguments: { filters: { operation: "analyze_function" } },
@@ -890,7 +890,7 @@ it("admits portable captures before SDK Evidence parsing and preserves capture c
     code: "resource_constraint",
     details: { resource: "memory" },
   });
-  await client.ping();
+  await client.listTools();
 
   const capture = analysisViewCaptureFixture();
   capture.records = capture.records.slice(0, 1);
@@ -1024,7 +1024,7 @@ it("delivers a bounded native dossier view over MCP without a Ghidra provider or
     { kind: "address", address: "0x401000" },
   ]);
   expect(JSON.stringify(response.structuredContent).length).toBeLessThan(12000);
-  await client.ping();
+  await client.listTools();
 });
 
 it("retains an oversized selected observation and keeps subsequent views usable", async () => {
@@ -1092,7 +1092,7 @@ it("retains an oversized selected observation and keeps subsequent views usable"
       ],
     },
   });
-  await client.ping();
+  await client.listTools();
   const summary = await client.callTool({
     name: "inspect_analysis_view",
     arguments: {
@@ -1165,7 +1165,7 @@ it("retains an oversized native assembly row and permits a subsequent smaller vi
     item: { text: "int fixture_" },
     parent_evidence_id: parent.evidence_id,
   });
-  await client.ping();
+  await client.listTools();
 });
 
 it("reads successive native source pages directly from a completed-result transport error", async () => {
@@ -1255,7 +1255,7 @@ it("reads successive native source pages directly from a completed-result transp
   expect(
     session.evidenceById(parent.evidence_id)?.normalized_result,
   ).toMatchObject({ pseudocode });
-  await client.ping();
+  await client.listTools();
   expect(calls).toEqual(["analyze_function"]);
 });
 
@@ -1833,7 +1833,7 @@ it("extracts an environment state identically from retained, portable and file M
     },
   });
   expect(JSON.stringify(refused)).not.toContain("probe folder");
-  await client.ping();
+  await client.listTools();
 });
 
 it("reports environment coverage identically from retained, portable and file MCP Evidence", async () => {
@@ -1882,7 +1882,7 @@ it("reports environment coverage identically from retained, portable and file MC
   }
   expect(outputs[1]).toEqual(outputs[0]);
   expect(outputs[2]).toEqual(outputs[0]);
-  await client.ping();
+  await client.listTools();
 });
 
 it("accounts for every safe HTTP method in environment state and coverage", async () => {
@@ -2098,7 +2098,7 @@ it("projects an environment manifest identically from retained, portable and fil
   });
   expect(JSON.stringify(refused)).toContain("sensitive_values_unretained");
   expect(JSON.stringify(refused)).not.toContain("/api/folders");
-  await client.ping();
+  await client.listTools();
 });
 
 it("pages retained raw array rows without losing the parent and refuses an oversized row", async () => {

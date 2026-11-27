@@ -297,7 +297,10 @@ it("searches bytes through MCP and the socket bridge with pagination and skipped
   );
   const client = new Client(
     { name: "byte-search", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

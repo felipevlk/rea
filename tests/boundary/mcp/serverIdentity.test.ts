@@ -196,6 +196,7 @@ it("reports the connected client and compares caller expectations against the li
     {
       jsonSchemaValidator: createMcpSchemaValidation(),
       capabilities: { elicitation: { form: {} } },
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
     },
   );
   const [clientTransport, serverTransport] =
@@ -240,7 +241,10 @@ describe("active-target availability over MCP", () => {
     );
     const client = new Client(
       { name: "availability-test", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

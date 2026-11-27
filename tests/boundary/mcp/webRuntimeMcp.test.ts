@@ -37,7 +37,10 @@ it("advertises actual SDK schemas, instrumentation effects and session-owned inl
   );
   const client = new Client(
     { name: "web-runtime-contract", version: "1" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: schemaValidation,
+    },
   );
   onTestFinished(async () => {
     await client.close();
@@ -127,7 +130,10 @@ it("reports provider progress for observe_web_execution to the MCP caller", asyn
   );
   const client = new Client(
     { name: "web-runtime-progress", version: "1" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: schemaValidation,
+    },
   );
   onTestFinished(async () => {
     await client.close();
@@ -185,7 +191,10 @@ cliTest(
     );
     const client = new Client(
       { name: "runtime-frame-identity", version: "1" },
-      { jsonSchemaValidator: schemaValidation },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: schemaValidation,
+      },
     );
     onTestFinished(async () => {
       await client.close();
@@ -272,7 +281,10 @@ cliTest(
     );
     const client = new Client(
       { name: "runtime-negative-columns", version: "1" },
-      { jsonSchemaValidator: schemaValidation },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: schemaValidation,
+      },
     );
     onTestFinished(async () => {
       await client.close();
@@ -368,7 +380,10 @@ it.each([
     );
     const client = new Client(
       { name: "web-runtime-partial", version: "1" },
-      { jsonSchemaValidator: schemaValidation },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: schemaValidation,
+      },
     );
     onTestFinished(async () => {
       await client.close();

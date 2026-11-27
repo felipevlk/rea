@@ -82,7 +82,10 @@ test("retains the selected endpoint when a direct JEB connection fails", async (
         name: "jeb-endpoint-acceptance",
         version: "1",
       },
-      { jsonSchemaValidator: schemaValidation },
+      {
+        jsonSchemaValidator: schemaValidation,
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     await withVerifierCleanup(async () => {
       await client.connect(transport);
@@ -153,7 +156,10 @@ test("starts production stdio MCP and retains peer requests around a JEB configu
   });
   const client = new Client(
     { name: "jeb-isolation-acceptance", version: "1" },
-    { jsonSchemaValidator: schemaValidation },
+    {
+      jsonSchemaValidator: schemaValidation,
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   let stderr = "";
   transport.stderr?.on("data", (chunk: Buffer) => {
@@ -161,7 +167,7 @@ test("starts production stdio MCP and retains peer requests around a JEB configu
   });
   await withVerifierCleanup(async () => {
     await client.connect(transport);
-    await client.ping();
+    await client.listTools();
     const definition = (await client.listTools()).tools.find(
       ({ name }) => name === "inspect_jeb_client",
     );
@@ -177,6 +183,6 @@ test("starts production stdio MCP and retains peer requests around a JEB configu
       code: "configuration_invalid",
       details: { settings: [{ setting: "REA_JEB_MCP_TIMEOUT_MS" }] },
     });
-    await client.ping();
+    await client.listTools();
   }, [() => client.close(), () => transport.close()]);
 });

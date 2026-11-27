@@ -16,7 +16,10 @@ import { createMcpSchemaValidation } from "../../fixtures/mcpSchemaValidation.js
 const testClient = (name: string) =>
   new Client(
     { name, version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
 
 it.each(["current_address", "analyze_function"] as const)(

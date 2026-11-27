@@ -292,7 +292,10 @@ cliTest(
         name: "bundle-path-contract-test",
         version: "1",
       },
-      { jsonSchemaValidator: schemas },
+      {
+        jsonSchemaValidator: schemas,
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     const transport = new StdioClientTransport({
       command: process.execPath,

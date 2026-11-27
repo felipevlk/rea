@@ -88,7 +88,9 @@ cliTest(
         ({ kind, label }) => kind === "function" && label === "greet",
       ),
     ).toBe(true);
-    await expect(client.ping()).resolves.toEqual({});
+    await expect(client.listTools()).resolves.toMatchObject({
+      tools: expect.any(Array),
+    });
     expect(await readFile(path, "utf8")).toBe(source);
   },
 );

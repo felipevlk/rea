@@ -47,5 +47,5 @@ it("delivers typed tool failures without violating the advertised success schema
   const successful = await call("get_evidence_bundle", {});
   expect(successful.isError).not.toBe(true);
   expect(successful.structuredContent).toBeDefined();
-  await client.ping();
+  await client.listTools();
 });

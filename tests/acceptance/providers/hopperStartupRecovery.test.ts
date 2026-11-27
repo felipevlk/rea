@@ -89,7 +89,10 @@ test.for(["target", "loader"] as const)(
     });
     const mcp = new Client(
       { name: "hopper-literal-boundary", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     onTestFinished(async () => {
       await closeVerifierResources([
@@ -183,7 +186,10 @@ test("recovers a denied Hopper launch through the same stdio MCP session and CLI
   });
   const mcp = new Client(
     { name: "hopper-startup-recovery", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   let stderr = "";
   transport.stderr?.on("data", (chunk: Buffer) => {
@@ -303,7 +309,10 @@ test.for(["handoff", "not-found"] as const)(
     });
     const mcp = new Client(
       { name: "hopper-late-readiness", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     const children: ChildProcess[] = [];
     let runtime: string | undefined;

@@ -44,7 +44,10 @@ it("retains late-cancelled Go artifact Evidence through MCP and keeps the server
   );
   const client = new Client(
     { name: "late-abort-artifact", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -73,7 +76,9 @@ it("retains late-cancelled Go artifact Evidence through MCP and keeps the server
       }),
     );
   });
-  await expect(client.ping()).resolves.toEqual({});
+  await expect(client.listTools()).resolves.toMatchObject({
+    tools: expect.any(Array),
+  });
 });
 
 it("retains late-cancelled Inspector target Evidence through MCP and keeps the server usable", async () => {
@@ -109,7 +114,10 @@ it("retains late-cancelled Inspector target Evidence through MCP and keeps the s
   );
   const client = new Client(
     { name: "late-abort-inspector", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -141,7 +149,9 @@ it("retains late-cancelled Inspector target Evidence through MCP and keeps the s
       }),
     );
   });
-  await expect(client.ping()).resolves.toEqual({});
+  await expect(client.listTools()).resolves.toMatchObject({
+    tools: expect.any(Array),
+  });
 });
 
 it("records late-cancelled Browser target Evidence and keeps the server usable", async () => {
@@ -197,7 +207,10 @@ it("records late-cancelled Browser target Evidence and keeps the server usable",
   );
   const client = new Client(
     { name: "late-abort-browser", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -229,5 +242,7 @@ it("records late-cancelled Browser target Evidence and keeps the server usable",
       }),
     );
   });
-  await expect(client.ping()).resolves.toEqual({});
+  await expect(client.listTools()).resolves.toMatchObject({
+    tools: expect.any(Array),
+  });
 });

@@ -67,7 +67,10 @@ const connectedComparison = async () => {
       name: "process-evidence-identity",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await Promise.allSettled([client.close(), server.close(), session.close()]);

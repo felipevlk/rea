@@ -88,7 +88,10 @@ it("delivers provider-owned diagnostic keys without narrowing their JSON facts",
   );
   const mcp = new Client(
     { name: "provider-diagnostics", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -154,7 +157,10 @@ const createAliasedTargetMcp = async (beforeLookup?: () => Promise<void>) => {
   );
   const client = new Client(
     { name: "target-aliases", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -417,7 +423,10 @@ describe("provider selection over MCP", () => {
     );
     const mcp = new Client(
       { name: "provider-selection", version: "1.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -565,7 +574,10 @@ it("offers admitted providers and retains unconfigured rejections", async () => 
   );
   const mcp = new Client(
     { name: "provider-selection", version: "1.0.0" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -812,7 +824,10 @@ describe("binary_session detail over MCP", () => {
     );
     const mcp = new Client(
       { name: "session-detail", version: "1.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -1022,7 +1037,10 @@ it("reports confirmed snapshot binding differences and keeps the active session"
   const server = createServer({ kind: "session", session });
   const mcp = new Client(
     { name: "snapshot-mismatch", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -1151,7 +1169,10 @@ it.each([true, false])(
     );
     const mcp = new Client(
       { name: "comment-recovery", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -1245,7 +1266,10 @@ it("keeps containing-function recovery for undeclared comment facets", async () 
   );
   const mcp = new Client(
     { name: "undeclared-comment-facet", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -1383,6 +1407,7 @@ it.each(["compact"] as const)(
     const mcp = new Client(
       { name: "provider-verification", version: "1" },
       {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
         jsonSchemaValidator: new AjvJsonSchemaValidator(),
       },
     );
@@ -1513,7 +1538,10 @@ it("preserves a selected Ghidra project's read-only guidance when an edit is req
   );
   const mcp = new Client(
     { name: "project-refusal", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -1568,7 +1596,10 @@ it("labels unbound provider observations as selection-time after a repair", asyn
   );
   const mcp = new Client(
     { name: "candidate-scope", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -1677,7 +1708,10 @@ it("preserves the bound client when a candidate refresh is cancelled during fina
   );
   const mcp = new Client(
     { name: "candidate-refresh-cancel", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -1755,7 +1789,10 @@ it("orders a provider switch after an in-flight candidate refresh", async () => 
   );
   const mcp = new Client(
     { name: "refresh-switch-race", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -1841,7 +1878,10 @@ it("does not cancel an already admitted prompt lookup for a candidate refresh", 
   );
   const mcp = new Client(
     { name: "refresh-prompt", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -1914,7 +1954,10 @@ it("retains failed candidate-refresh cleanup while preserving the selected bindi
   );
   const mcp = new Client(
     { name: "candidate-refresh-cleanup", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -1988,7 +2031,10 @@ it("retains attributed mixed profile cleanup through registered MCP calls and pa
   );
   const mcp = new Client(
     { name: "profile-completion", version: "1.0.0" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -2075,7 +2121,10 @@ it.each(["ready", "cancelled", "physical"] as const)(
     );
     const mcp = new Client(
       { name: "async-readiness", version: "1.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

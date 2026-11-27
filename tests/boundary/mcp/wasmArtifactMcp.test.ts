@@ -180,7 +180,7 @@ it.each(["bin", "hop"])(
         },
       },
     });
-    await client.ping();
+    await client.listTools();
     expect(createClient).not.toHaveBeenCalled();
     expect(
       Buffer.compare(
@@ -731,7 +731,10 @@ it("rejects malformed paths, refuses WASM summary delivery before provider work 
   );
   const client = new Client(
     { name: "wasm-fixed-delivery", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [a, b] = InMemoryTransport.createLinkedPair();
   try {
@@ -788,7 +791,7 @@ it("rejects malformed paths, refuses WASM summary delivery before provider work 
       ).toEqual(value);
     }
     expect(inspect).toHaveBeenCalledTimes(2);
-    await client.ping();
+    await client.listTools();
   } finally {
     await client.close();
     await server.close();
@@ -851,7 +854,10 @@ it("compares caller-owned complete inline WASM sources on a fixed server without
   );
   const client = new Client(
     { name: "wasm-fixed-comparison", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -903,7 +909,10 @@ it("retries cleanup of the injected WASM module after server shutdown fails", as
   );
   const client = new Client(
     { name: "wasm-cleanup-retry", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [a, b] = InMemoryTransport.createLinkedPair();
   try {

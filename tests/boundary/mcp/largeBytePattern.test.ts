@@ -73,5 +73,5 @@ it("validates large search_bytes inputs without breaking stdio MCP", async () =>
 
   const final = await call("search_bytes", { pattern: "aa" });
   expect(parseMcpToolError(final).error.code).toBe("target_unavailable");
-  await client.ping();
+  await client.listTools();
 });

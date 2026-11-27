@@ -113,7 +113,7 @@ cliTest(
         },
       },
     });
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -467,7 +467,7 @@ cliTest(
         report[collection].map((row, index) => ({ index, ...row })),
       );
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -518,7 +518,7 @@ cliTest(
       const response = await call("inspect_il2cpp_metadata", { path });
       expect(parseMcpToolError(response).error).toMatchObject(expected);
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -584,7 +584,7 @@ cliTest(
         ({ evidence_id }) => evidence_id === reference.evidence_id,
       ),
     ).toMatchObject(expected.details.partial_observation);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -772,7 +772,7 @@ it("queries compact retained metadata through the real SDK with exact row identi
     },
   });
   expect(parseMcpToolError(invalid).error.code).toBe("invalid_request");
-  await client.ping();
+  await client.listTools();
 });
 
 it("imports historical metadata Evidence with unavailable member collections without inventing empty results", async () => {
@@ -1069,7 +1069,7 @@ cliTest(
     expect(projected.items).toEqual(
       expected.slice(2).map((row, offset) => ({ index: offset + 2, ...row })),
     );
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -1212,7 +1212,7 @@ cliTest(
         expected(path, binaryPath, "binary_path", "binary_path"),
       );
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -1257,7 +1257,7 @@ cliTest(
     expect(
       parseCliMetadata(response.structuredContent).method_addresses,
     ).toEqual(report.method_addresses);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -1325,7 +1325,7 @@ cliTest(
         expect(parseCliMetadata(response.structuredContent)).toEqual(report);
       }
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -1385,7 +1385,7 @@ cliTest(
       }
       expect(Buffer.compare(await readFile(binaryPath), bytes)).toBe(0);
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -1467,7 +1467,7 @@ cliTest(
         mcpReport.parameter_types.some((row) => row.name === entry.expected),
       ).toBe(true);
     }
-    await client.ping();
+    await client.listTools();
   },
 );
 

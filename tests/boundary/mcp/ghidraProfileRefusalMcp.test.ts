@@ -46,7 +46,10 @@ const openRawArm = async (languageId: string | undefined) => {
   );
   const mcp = new Client(
     { name: "profile-refusal", version: "1.0.0" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

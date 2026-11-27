@@ -163,7 +163,7 @@ it.skipIf(
     });
     const small = join(root, "small.har");
     await writeFile(small, capture(2));
-    await client.ping();
+    await client.listTools();
     const control = await call("inspect_web_network_capture", {
       capture_path: small,
       format: "har",

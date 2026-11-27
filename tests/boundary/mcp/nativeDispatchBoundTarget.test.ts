@@ -39,7 +39,10 @@ const inspectReplacements = async (replacements: readonly Replacement[]) => {
   }
   const client = new Client(
     { name: "dispatch-bound-target", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   const transport = new StdioClientTransport({
     command: process.execPath,

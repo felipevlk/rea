@@ -111,7 +111,10 @@ it("rejects one relative path field at a time on tools/list", async () => {
   }
   const client = new Client(
     { name: "absolute-path-client", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

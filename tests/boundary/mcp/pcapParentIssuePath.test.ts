@@ -72,7 +72,10 @@ it("locates malformed pcap parent fields beneath the analysis-view source", asyn
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "pcap-parent-path-repro", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   await withVerifierCleanup(async () => {
     const [clientTransport, serverTransport] =
@@ -121,7 +124,7 @@ it("locates malformed pcap parent fields beneath the analysis-view source", asyn
         },
       });
     }
-    await client.ping();
+    await client.listTools();
   }, [
     () => client.close(),
     () => server.close(),

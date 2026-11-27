@@ -95,7 +95,10 @@ cliTest(
         name: "browser-scenario-input-diagnostics",
         version: "1",
       },
-      { jsonSchemaValidator: schemaValidation },
+      {
+        jsonSchemaValidator: schemaValidation,
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     const transport = new StdioClientTransport({
       command: process.execPath,
@@ -198,7 +201,9 @@ cliTest(
             },
           });
         }
-        await expect(client.ping()).resolves.toEqual({});
+        await expect(client.listTools()).resolves.toMatchObject({
+          tools: expect.any(Array),
+        });
       }
     } finally {
       await Promise.all([client.close(), transport.close()]);

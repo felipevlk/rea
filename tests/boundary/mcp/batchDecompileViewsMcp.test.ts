@@ -739,7 +739,10 @@ it("keeps the caller's own source when a page cannot fit, without retaining its 
       name: "batch-unretained",
       version: "1.0.0",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

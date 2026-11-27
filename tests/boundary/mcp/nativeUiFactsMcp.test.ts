@@ -54,7 +54,10 @@ const connectNativeUi = async () => {
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "native-ui-facts", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   onTestFinished(async () => {
@@ -257,7 +260,7 @@ it("keeps native UI availability after initial selection errors and preserves la
       message: "Grant Accessibility to the REA host in System Settings",
     },
   });
-  await client.ping();
+  await client.listTools();
 });
 
 it.each(["application-executable-unavailable", "executable-path-unavailable"])(
@@ -277,6 +280,6 @@ it.each(["application-executable-unavailable", "executable-path-unavailable"])(
         details: { reason: `${code}: ${message}` },
       },
     });
-    await client.ping();
+    await client.listTools();
   },
 );

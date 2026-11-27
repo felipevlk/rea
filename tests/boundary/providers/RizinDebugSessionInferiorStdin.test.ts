@@ -338,7 +338,10 @@ linuxIt.each([
     const server = rizinDebugMcpServer("rizin-stdin", manager);
     const client = new Client(
       { name: "rizin-stdin", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

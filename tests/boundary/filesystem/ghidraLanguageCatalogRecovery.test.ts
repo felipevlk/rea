@@ -125,7 +125,10 @@ it("retries the retained catalog close on later MCP admission and reopens the sa
   );
   const client = new Client(
     { name: "catalog-close-recovery", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

@@ -158,7 +158,10 @@ const refuseOpenProject = async (
   );
   const client = new Client(
     { name: "jeb-failure-contract", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   return withVerifierCleanup(async () => {
     const [clientTransport, serverTransport] =

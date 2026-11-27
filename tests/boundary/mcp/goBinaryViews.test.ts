@@ -387,7 +387,7 @@ goViewTest(
         .map((record) => parseEvidence(record))
         .find((record) => record.evidence_id === complete.evidence_id),
     ).toEqual(complete);
-    await client.ping();
+    await client.listTools();
   },
 );
 

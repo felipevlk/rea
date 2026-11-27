@@ -84,7 +84,7 @@ it("retains rejected MCP and failed session closes while releasing independent p
   const server = createServer({ kind: "session", session });
   const client = await connect(server);
   retainPromptResources(session);
-  await client.ping();
+  await client.listTools();
   const sdkFailure = new Error("controlled prompt client cleanup failure");
   const sessionFailure = new ProviderCleanupError(
     "fixture",
@@ -554,7 +554,10 @@ describe("guided prompt completion registry", () => {
         name: "prompt-registry-client",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const changed = new Promise<void>((resolve) => {
       client.setNotificationHandler("notifications/prompts/list_changed", () =>
@@ -776,7 +779,10 @@ describe("guided prompt completion lifecycle", () => {
     });
     const client = new Client(
       { name: "prompt-cancel-client", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     await connectPair(server, client);
     const controller = new AbortController();
@@ -1104,7 +1110,10 @@ const connect = async (
 ): Promise<Client> => {
   const client = new Client(
     { name: "prompt-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   await connectPair(server, client);
   return client;

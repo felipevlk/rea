@@ -82,7 +82,10 @@ function expectStrictInputSchemaParity(
 async function listAdvertisedTools(server: McpServer) {
   const client = new Client(
     { name: "schema-validation", version: "0" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

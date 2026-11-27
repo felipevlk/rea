@@ -81,6 +81,6 @@ cliTest(
         refusal,
       },
     });
-    await client.ping();
+    await client.listTools();
   },
 );

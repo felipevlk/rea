@@ -40,7 +40,10 @@ it("publishes valid SDK schemas and records the named module trace without a bin
   );
   const client = new Client(
     { name: "module-contract", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();
@@ -411,7 +414,10 @@ const createModuleFinalizationHarness = async (
   );
   const client = new Client(
     { name: "module-finalization", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     allowClose = true;

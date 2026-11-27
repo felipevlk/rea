@@ -96,7 +96,10 @@ it("advertises exact valid Apktool schemas and records inline evidence through M
   await server.connect(serverTransport);
   const client = new Client(
     { name: "apktool-boundary", version: "0.0.0" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(() => client.close());
   await client.connect(clientTransport);

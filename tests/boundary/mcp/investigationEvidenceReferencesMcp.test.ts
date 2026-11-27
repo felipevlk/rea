@@ -225,7 +225,10 @@ it("reports missing sources for a retained dossier with a large link set", async
       name: "large-evidence-links-test",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   onTestFinished(() => client.close());
   await client.connect(

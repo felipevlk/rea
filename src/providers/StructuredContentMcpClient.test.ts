@@ -106,6 +106,6 @@ it("delegates explicitly supplied result schemas and other method requests uncha
         schema,
       ),
     ).toBe("custom result");
-    expect(await client.ping()).toEqual({});
+    expect((await client.listTools()).tools.length).toBeGreaterThan(0);
   });
 });

@@ -56,7 +56,10 @@ it("propagates MCP cancellation into an active Cutter command", async () => {
   const server = cutterMcpServer("cutter-cancellation", service);
   const client = new Client(
     { name: "cutter-cancellation", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -121,7 +124,10 @@ it("shares one cleanup proof across concurrent Cutter MCP commands without Binar
   const server = cutterMcpServer("cutter-cleanup-race", service);
   const client = new Client(
     { name: "cutter-cleanup-race", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -212,7 +218,10 @@ it("cancels active discovery sockets, stops queued probes and recovers on the sa
   const server = cutterMcpServer("cutter-discovery-cancel", service);
   const client = new Client(
     { name: "cutter-discovery-cancel", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -327,7 +336,10 @@ it.skipIf(process.platform === "win32")(
         name: "cutter-generation-proof",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [ct, st] = InMemoryTransport.createLinkedPair();
     try {

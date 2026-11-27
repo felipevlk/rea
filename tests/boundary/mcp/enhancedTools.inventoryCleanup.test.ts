@@ -64,5 +64,5 @@ for (const [tool, refused] of [
         });
         expect(refusal.cleanupIncomplete).toBe(true);
       } else expect(response.isError).not.toBe(true);
-      await client.ping();
+      await client.listTools();
     });

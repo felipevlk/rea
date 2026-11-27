@@ -114,7 +114,10 @@ export const createSessionMcpHarness = async (
   );
   const mcp = new Client(
     { name: "session-test", version: "1.0.0" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

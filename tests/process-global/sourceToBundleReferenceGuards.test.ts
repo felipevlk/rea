@@ -196,7 +196,9 @@ it.each(["validation", "comparison"] as const)(
     expect(await pending).toBeInstanceOf(Error);
     await settled;
     expect(session.exportEvidenceBundle()).toEqual(before);
-    await expect(client.ping()).resolves.toEqual({});
+    await expect(client.listTools()).resolves.toMatchObject({
+      tools: expect.any(Array),
+    });
   },
 );
 

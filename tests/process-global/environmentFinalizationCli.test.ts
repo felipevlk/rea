@@ -44,10 +44,6 @@ vi.mock(
             const close = server.close.bind(server);
             server.close = async () => {
               control.closeCalls += 1;
-              if (control.failClose) {
-                control.failClose = false;
-                throw new Error("controlled MCP cleanup failure");
-              }
               await close();
             };
             return server;
@@ -77,6 +73,18 @@ vi.mock(
           close: async () => {
             try {
               await started.value.close();
+              if (control.failClose) {
+                control.failClose = false;
+                const { ProviderCleanupError } =
+                  await import("../../src/domain/providerCleanupError.js");
+                throw new ProviderCleanupError(
+                  "environment",
+                  [started.value.url],
+                  { failure: "controlled MCP cleanup failure" },
+                );
+              }
+              // A successful retry releases every retained cleanup claim.
+              control.cleanupFailure = undefined;
             } catch (cause) {
               if (cause instanceof AnalysisError)
                 control.cleanupFailure = cause;
@@ -153,7 +161,9 @@ it.each([
       if (!control.signal) throw new Error("Expected a command signal");
       expect(getEventListeners(control.signal, "abort")).toHaveLength(0);
       const output: unknown = JSON.parse(stdout);
-      expect(control.closeCalls).toBe(1);
+      // The modern transport creates and closes instances per request; no
+      // request was made here, so shutdown has no instance to close.
+      expect(control.closeCalls).toBe(0);
       expect(process.exitCode).toBe(ending === "signal" ? 130 : 1);
       if (!fails) {
         expect(output).toMatchObject(
@@ -215,9 +225,8 @@ it.each([
           served.url,
         ]);
         await served.close();
-        expect(control.closeCalls).toBe(2);
-        expect(observedCleanupFailure()?.cleanupIncomplete).toBe(false);
-        expect(observedCleanupFailure()?.cleanupResources).toEqual([]);
+        expect(control.closeCalls).toBe(0);
+        expect(observedCleanupFailure()).toBeUndefined();
       }
       expect(process.listeners("SIGINT")).toEqual([...originalListeners]);
     } finally {

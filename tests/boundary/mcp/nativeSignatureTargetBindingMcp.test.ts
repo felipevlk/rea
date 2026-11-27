@@ -55,7 +55,10 @@ it("keeps admitted bundle facts in a completed signature report when cleanup mus
   });
   const client = new Client(
     { name: "bundle-signature-cleanup-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -134,7 +137,10 @@ it("keeps a failed snapshot descriptor and root together through MCP close and r
   });
   const client = new Client(
     { name: "signature-order-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -176,7 +182,7 @@ it("keeps a failed snapshot descriptor and root together through MCP close and r
       expect(removed).toBe(0);
       expect((await lstat(join(root, "snapshot-1"))).isDirectory()).toBe(true);
       expect(run).not.toHaveBeenCalled();
-      await client.ping();
+      await client.listTools();
     }
     allowClose = true;
     expect(
@@ -235,7 +241,10 @@ it.each(["mach-o", "mach-o-universal"] as const)(
     const server = createServer({ kind: "session", session });
     const client = new Client(
       { name: "signature-binding-test", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

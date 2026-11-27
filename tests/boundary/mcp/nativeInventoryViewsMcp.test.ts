@@ -353,7 +353,10 @@ it("inlines a small inventory, summarizes a large one, and keeps it complete whe
   });
   const client = new Client(
     { name: "unretained-size-aware", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();
@@ -458,7 +461,10 @@ it("refuses summary before provider work when no retaining session is configured
       name: "unretained-native-summary",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();
@@ -509,7 +515,10 @@ it("projects imported inventories with an unknown artifact without inventing a p
   const server = createServer({ kind: "session", session });
   const client = new Client(
     { name: "unbound-native-views", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

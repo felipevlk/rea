@@ -56,7 +56,7 @@ const callCaptureViaMcp = async (scenario: Record<string, unknown>) => {
     name: "capture_process_scenario",
     arguments: scenario,
   });
-  await client.ping();
+  await client.listTools();
   return result;
 };
 

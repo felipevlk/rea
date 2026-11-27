@@ -70,7 +70,10 @@ it("states persistent-session limitations once in a record each result links", a
   const server = createServer({ kind: "session", session });
   const mcp = new Client(
     { name: "session-limitations", version: "1" },
-    { jsonSchemaValidator: validation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: validation,
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -232,7 +235,10 @@ it("writes the full session limitations into a decompile_all directory", async (
   const server = createServer({ kind: "session", session });
   const mcp = new Client(
     { name: "session-limitations-export", version: "1" },
-    { jsonSchemaValidator: validation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: validation,
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

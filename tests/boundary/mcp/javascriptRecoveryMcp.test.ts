@@ -33,7 +33,10 @@ it
     );
     const client = new Client(
       { name: "recovery-contract", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     onTestFinished(async () => {
       await client.close();
@@ -115,7 +118,10 @@ it.skipIf(process.platform !== "linux" || process.arch !== "x64")(
     );
     const client = new Client(
       { name: "recovery-denied", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     onTestFinished(async () => {
       await client.close();

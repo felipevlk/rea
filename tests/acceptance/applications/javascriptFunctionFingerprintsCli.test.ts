@@ -122,6 +122,6 @@ cliTest(
         expect(cliEvidence.evidence_id).toBe(traceEvidence.evidence_id);
       }
     }
-    await client.ping();
+    await client.listTools();
   },
 );

@@ -111,7 +111,7 @@ it("observes a real Node Inspector and releases attachments after cancellation a
   expect((await call("observe_javascript_runtime", request)).isError).not.toBe(
     true,
   );
-  await client.ping();
+  await client.listTools();
   await terminate();
   const unreachable = await call("list_javascript_runtime_targets", {
     inspector_endpoint: endpoint,

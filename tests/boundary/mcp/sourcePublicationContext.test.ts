@@ -107,7 +107,10 @@ it.each(
     );
     const client = new Client(
       { name: "source-context", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [ct, st] = InMemoryTransport.createLinkedPair();
     try {
@@ -227,7 +230,10 @@ it.each([false, true])(
     const server = createServer({ kind: "session", session });
     const client = new Client(
       { name: "source-cleanup-context", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [ct, st] = InMemoryTransport.createLinkedPair();
     try {
@@ -345,7 +351,10 @@ it("keeps a smaller sibling recovery when a later completed observation exceeds 
       name: "multiple-recovery-context",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [ct, st] = InMemoryTransport.createLinkedPair();
   try {

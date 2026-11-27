@@ -35,7 +35,10 @@ const connect = async () => {
   const server = createServer({ kind: "session", session }, { environment });
   const client = new Client(
     { name: "agent-result-budget", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

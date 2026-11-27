@@ -23,6 +23,7 @@ import {
 } from "../contracts/mcpSchemaPresentation.js";
 import { errorMessage } from "../kernel/errorMessage.js";
 import { sha256Hex } from "../kernel/sha256Hex.js";
+import { MODERN_PROTOCOL_VERSIONS } from "../server/protocolVersions.js";
 
 /**
  * Digests of the selected output profile. The catalog file records the `off`
@@ -249,6 +250,7 @@ export const runDeferred = async (
                 compactPresentation: COMPACT_INPUT_SCHEMA_PRESENTATION,
                 outputProfile: config.mcpOutputSchemaProfile,
                 toolFamilies,
+                supportedProtocolVersions: MODERN_PROTOCOL_VERSIONS,
                 identity: {
                   ...catalog.identity,
                   digests: deferredCatalogDigests(

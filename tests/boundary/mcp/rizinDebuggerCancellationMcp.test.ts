@@ -62,7 +62,10 @@ process.stdin.on("data", (chunk) => {
         name: "rizin-evidence-provenance",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -149,7 +152,10 @@ it("admits Rizin startup across a bound analysis session", async () => {
   );
   const client = new Client(
     { name: "rizin-start-admission", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -212,7 +218,10 @@ process.stdin.on("data", async (chunk) => {
     const server = rizinDebugMcpServer("rizin-cancellation", manager);
     const client = new Client(
       { name: "rizin-cancellation", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

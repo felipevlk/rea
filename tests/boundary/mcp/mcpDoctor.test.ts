@@ -599,7 +599,10 @@ describe("production MCP doctor probe validation", () => {
       };
       const client = new Client(
         { name: "doctor-reply-capture", version: "1" },
-        { jsonSchemaValidator: schemaValidation },
+        {
+          jsonSchemaValidator: schemaValidation,
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+        },
       );
       const transport = new StdioClientTransport({
         command: process.execPath,

@@ -86,7 +86,10 @@ it.each(["compact"] as const)(
     const validation = createMcpSchemaValidation();
     const client = new Client(
       { name: "native-view-identity", version: "1" },
-      { jsonSchemaValidator: validation },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: validation,
+      },
     );
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const root = await createTestTempDirectory("rea-native-view-identity-");

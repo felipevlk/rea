@@ -91,7 +91,10 @@ it("uses the server-selected environment unless a provider environment overrides
     );
     const client = new Client(
       { name: "reverse-env-test", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -142,7 +145,10 @@ it("keeps the probe's identification when the command then fails to start", asyn
   );
   const client = new Client(
     { name: "reverse-launch-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

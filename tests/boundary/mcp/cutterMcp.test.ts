@@ -225,7 +225,10 @@ it("preserves live Cutter command Evidence and parity through the MCP boundary",
   );
   const client = new Client(
     { name: "cutter-mcp-boundary", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

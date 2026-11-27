@@ -51,7 +51,10 @@ cliTest.for([
         name: "scenario-reference-diagnostics",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     const transport = new StdioClientTransport({
       command: process.execPath,
@@ -75,7 +78,9 @@ cliTest.for([
       });
       expect(result.isError).toBe(true);
       expect(parseMcpToolError(result).error).toMatchObject(expected);
-      await expect(client.ping()).resolves.toEqual({});
+      await expect(client.listTools()).resolves.toMatchObject({
+        tools: expect.any(Array),
+      });
     } finally {
       await Promise.all([client.close(), transport.close()]);
     }

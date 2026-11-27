@@ -42,7 +42,10 @@ const connect = async (environment?: NodeJS.ProcessEnv) => {
   );
   const client = new Client(
     { name: "target-content-test", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -139,7 +142,10 @@ describe("MCP fixed-target scope guidance", () => {
     );
     const client = new Client(
       { name: "fixed-target-scope", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -230,7 +236,10 @@ describe.each([
           name: "partial-provenance-client",
           version: "1",
         },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+        {
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+          jsonSchemaValidator: createMcpSchemaValidation(),
+        },
       );
       const [clientTransport, serverTransport] =
         InMemoryTransport.createLinkedPair();

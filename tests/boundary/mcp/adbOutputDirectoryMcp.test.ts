@@ -42,7 +42,10 @@ it.skipIf(process.platform === "win32")(
     await server.connect(serverTransport);
     const client = new Client(
       { name: "adb-output-refusal", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     onTestFinished(() => client.close());
     await client.connect(clientTransport);

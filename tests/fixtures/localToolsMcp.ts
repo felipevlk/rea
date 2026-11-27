@@ -51,7 +51,10 @@ export async function connectLocalToolsMcp(
   const client = applyCompleteEvidenceByDefault(
     new Client(
       { name: "local-tools-e2e", version: "1" },
-      { jsonSchemaValidator: jsonSchemaValidator ?? validation },
+      {
+        jsonSchemaValidator: jsonSchemaValidator ?? validation,
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     ),
     delivery,
   );

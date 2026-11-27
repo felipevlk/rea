@@ -40,7 +40,7 @@ const analyzeThroughCliAndMcp = async (source: string) => {
   });
   expect(response.isError, JSON.stringify(response)).not.toBe(true);
   expect(response.structuredContent).toEqual(evidence);
-  await client.ping();
+  await client.listTools();
   return evidence;
 };
 

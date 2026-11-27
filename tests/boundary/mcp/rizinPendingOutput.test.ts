@@ -52,7 +52,10 @@ test.each([
     const server = rizinDebugMcpServer("rizin-partial-test", manager);
     const client = new Client(
       { name: "rizin-partial-test", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

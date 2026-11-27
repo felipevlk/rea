@@ -54,7 +54,10 @@ it("publishes valid SDK schemas and retains historical inline Evidence with the 
       name: "historical-capture-contract",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   onTestFinished(async () => {
     await client.close();

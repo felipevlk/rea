@@ -241,7 +241,7 @@ cliTest(
         expect.objectContaining({ relation: "calls", resolution: "candidate" }),
       ]),
     );
-    await client.ping();
+    await client.listTools();
   },
 );
 

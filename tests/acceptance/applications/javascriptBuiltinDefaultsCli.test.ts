@@ -47,7 +47,7 @@ it("retains streams with an undecidable delete encoding through CLI and MCP", as
   });
   expect(response.isError, JSON.stringify(response)).not.toBe(true);
   expect(response.structuredContent).toEqual(evidence);
-  await client.ping();
+  await client.listTools();
 }, 60000);
 
 it("keeps prototype-intercepted streams and rejects boxed options through CLI and MCP", async () => {
@@ -132,7 +132,7 @@ it("keeps prototype-intercepted streams and rejects boxed options through CLI an
   });
   expect(response.isError, JSON.stringify(response)).not.toBe(true);
   expect(response.structuredContent).toEqual(evidence);
-  await client.ping();
+  await client.listTools();
 }, 60000);
 
 it("preserves earlier and sibling effects without inventing replaced cached-module or process effects", async () => {
@@ -246,7 +246,7 @@ it("preserves earlier and sibling effects without inventing replaced cached-modu
   });
   expect(response.isError, JSON.stringify(response)).not.toBe(true);
   expect(response.structuredContent).toEqual(evidence);
-  await client.ping();
+  await client.listTools();
 });
 
 it("excludes monkey-patched CommonJS effects from CLI and MCP evidence", async () => {
@@ -297,7 +297,7 @@ it("excludes monkey-patched CommonJS effects from CLI and MCP evidence", async (
   });
   expect(response.isError, JSON.stringify(response)).not.toBe(true);
   expect(response.structuredContent).toEqual(evidence);
-  await client.ping();
+  await client.listTools();
 });
 
 it("retains CommonJS builtin effects and handle links through CLI and MCP", async () => {
@@ -374,7 +374,7 @@ it("retains CommonJS builtin effects and handle links through CLI and MCP", asyn
   });
   expect(response.isError, JSON.stringify(response)).not.toBe(true);
   expect(response.structuredContent).toEqual(evidence);
-  await client.ping();
+  await client.listTools();
 });
 
 it.each([

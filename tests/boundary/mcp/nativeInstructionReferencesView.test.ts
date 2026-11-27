@@ -163,7 +163,10 @@ it.each(["compact"] as const)(
     );
     const client = new Client(
       { name: "instruction-reference-pages", version: "1" },
-      { jsonSchemaValidator: validation },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: validation,
+      },
     );
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -303,7 +306,10 @@ it("recovers the complete parent when a single reference exceeds the page budget
       name: "oversized-instruction-reference",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

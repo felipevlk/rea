@@ -26,7 +26,10 @@ const config = parseConfig({});
 if (!config.ok) throw config.error;
 const session = createBinarySession(config.value, silentLogger, {});
 const server = createServer({ kind: "session", session }, { environment: {} });
-const client = new Client({ name: "contract-presentation", version: "1" });
+const client = new Client(
+  { name: "contract-presentation", version: "1" },
+  { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+);
 const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 await withVerifierCleanup(async () => {
   await server.connect(serverTransport);

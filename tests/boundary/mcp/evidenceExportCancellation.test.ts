@@ -37,7 +37,10 @@ it.each([false, true])(
         name: "evidence-export-cancellation",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     const controller = new AbortController();
     const stagedWrite = phaseGate<string>();
@@ -78,7 +81,7 @@ it.each([false, true])(
     expect(await cancellation).toMatchObject({
       message: expect.stringContaining("SDK export cancellation verification"),
     });
-    await client.ping();
+    await client.listTools();
     stagedWrite.release();
     await expect
       .poll(() => readdir(root))
@@ -86,7 +89,7 @@ it.each([false, true])(
     if (overwrite)
       expect(await readFile(path, "utf8")).toBe("original destination");
     expect(session.hasEvidence(evidence.evidence_id)).toBe(true);
-    await client.ping();
+    await client.listTools();
     const next = await client.callTool({
       name: "export_evidence_bundle",
       arguments: { path, overwrite },
@@ -103,6 +106,6 @@ it.each([false, true])(
         ],
       },
     });
-    await client.ping();
+    await client.listTools();
   },
 );

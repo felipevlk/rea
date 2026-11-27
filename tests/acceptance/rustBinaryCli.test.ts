@@ -50,7 +50,7 @@ cliTest(
     const response = await call("inspect_rust_binary", { path });
     expect(parseMcpToolError(response).error).toMatchObject(expectedFailure);
     expect(response.structuredContent).toBeUndefined();
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -173,7 +173,7 @@ cliTest(
     const response = await call("inspect_rust_binary", { path });
     expect(response.isError, JSON.stringify(response)).not.toBe(true);
     expectCliMcpEvidenceParity(evidence, response.structuredContent, path);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -328,7 +328,7 @@ cliTest(
       code: "unsupported_target",
       details: { operation: "inspect_rust_binary" },
     });
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -387,7 +387,7 @@ cliTest(
     const response = await call("inspect_rust_binary", { path });
     expect(response.isError, JSON.stringify(response)).not.toBe(true);
     expectCliMcpEvidenceParity(evidence, response.structuredContent, path);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -467,7 +467,7 @@ cliTest(
     const mcpError = parseMcpToolError(response).error;
     expect(mcpError).toMatchObject(expectedFailure);
     expect(mcpError.details?.limit).not.toHaveProperty("cli_flag");
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -593,7 +593,7 @@ cliTest(
     expect(go.json).toMatchObject(goFailure);
     const goResponse = await call("inspect_go_binary", { path });
     expect(parseMcpToolError(goResponse).error).toMatchObject(goFailure);
-    await client.ping();
+    await client.listTools();
   },
 );
 
@@ -740,6 +740,6 @@ cliTest(
       ],
     });
     expect(admitted.exitCode, admitted.stderr).toBe(0);
-    await client.ping();
+    await client.listTools();
   },
 );

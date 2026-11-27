@@ -282,7 +282,10 @@ describe.each([RIZIN, GDB, CUTTER])(
       );
       const client = new Client(
         { name: "debugger-lifecycle", version: "1" },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+        {
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+          jsonSchemaValidator: createMcpSchemaValidation(),
+        },
       );
       onTestFinished(async () => {
         await client.close();
@@ -372,7 +375,7 @@ describe.each([RIZIN, GDB, CUTTER])(
       expect(execute).toHaveBeenCalledOnce();
       expect(session.hasEvidence(completed.evidence_id)).toBe(false);
       controller.abort();
-      await client.ping();
+      await client.listTools();
       retiring.release();
       expect(await command).toBeInstanceOf(Error);
 

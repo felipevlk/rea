@@ -82,7 +82,7 @@ it("rejects oversized initial and resize terminal buffers through MCP before lau
     );
     await expect(access(marker)).rejects.toMatchObject({ code: "ENOENT" });
   }
-  await client.ping();
+  await client.listTools();
 });
 
 itWithCaptureCapability(

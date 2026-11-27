@@ -217,7 +217,10 @@ process.stdin.on("data", chunk => {
   const validation = createMcpSchemaValidation();
   const client = new Client(
     { name: "gdb-executable-selection", version: "1" },
-    { jsonSchemaValidator: validation },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: validation,
+    },
   );
   connections.push(
     () => client.close(),

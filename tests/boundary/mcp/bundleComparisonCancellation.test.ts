@@ -62,7 +62,10 @@ it("leaves the session unchanged after bundle comparison cancellation and permit
       name: "bundle-comparison-cancellation",
       version: "1",
     },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+      jsonSchemaValidator: createMcpSchemaValidation(),
+    },
   );
   const controller = new AbortController();
   let releaseRead: (() => void) | undefined;
@@ -129,7 +132,7 @@ it("leaves the session unchanged after bundle comparison cancellation and permit
     );
   await dispatch.reached(cancellation, "compare_bundles dispatch");
   await reader.reached(cancellation, "first file read");
-  await client.ping();
+  await client.listTools();
   controller.abort(new Error("SDK bundle comparison cancellation"));
   reader.release();
   expect(await cancellation).toMatchObject({
@@ -145,7 +148,7 @@ it("leaves the session unchanged after bundle comparison cancellation and permit
   expect(reader.totalReadBytes).toBeLessThan(leftContents.length);
   expect(session.exportEvidenceBundle()).toEqual(before);
 
-  await client.ping();
+  await client.listTools();
   const retry = await client.callTool({
     name: "compare_bundles",
     arguments: args,

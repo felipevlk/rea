@@ -437,7 +437,9 @@ test("records a completed late-close cancellation as server Evidence", async () 
     { step_id: "scenario_start", status: "completed" },
     { step_id: "settle", status: "completed" },
   ]);
-  await expect(client.ping()).resolves.toEqual({});
+  await expect(client.listTools()).resolves.toMatchObject({
+    tools: expect.any(Array),
+  });
 });
 
 test("delivers a retained summary and pages its exact steps", async () => {

@@ -87,7 +87,10 @@ export const verifyJavaScriptReturnShapes = async (
   const validation = createMcpSchemaValidation();
   const client = new Client(
     { name: "return-shapes-e2e", version: "1" },
-    { jsonSchemaValidator: validation },
+    {
+      jsonSchemaValidator: validation,
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -114,6 +117,6 @@ export const verifyJavaScriptReturnShapes = async (
         contract.outputSchema.parse(JSON.parse(text.text)).normalized_result,
       ),
     );
-    await client.ping();
+    await client.listTools();
   }, [() => client.close(), () => transport.close(), () => validation.clear()]);
 };

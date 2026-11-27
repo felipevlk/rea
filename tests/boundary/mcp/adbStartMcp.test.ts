@@ -64,7 +64,10 @@ else if (args[0] === "-s" && args[2] === "shell" && args[3] === "test") {
     await server.connect(serverTransport);
     const client = new Client(
       { name: "adb-push-boundary", version: "0.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     onTestFinished(() => client.close());
     await client.connect(clientTransport);
@@ -210,7 +213,10 @@ it
     await server.connect(serverTransport);
     const client = new Client(
       { name: "adb-start-boundary", version: "0.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     onTestFinished(() => client.close());
     await client.connect(clientTransport);
@@ -352,7 +358,10 @@ it.skipIf(process.platform === "win32")(
     await server.connect(serverTransport);
     const client = new Client(
       { name: "adb-start-refusal-mcp", version: "0.0.0" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        jsonSchemaValidator: createMcpSchemaValidation(),
+      },
     );
     onTestFinished(() => client.close());
     await client.connect(clientTransport);
