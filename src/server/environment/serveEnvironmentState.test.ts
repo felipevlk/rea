@@ -784,7 +784,10 @@ const withClient = async (
   use: (client: Client) => Promise<void>,
 ): Promise<void> => {
   const transport = new StreamableHTTPClientTransport(new URL(environment.url));
-  const client = new Client({ name: "environment-state", version: "1" });
+  const client = new Client(
+    { name: "environment-state", version: "1" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
   await client.connect(transport);
   try {
     const { tools } = await client.listTools();
@@ -793,7 +796,6 @@ const withClient = async (
     );
     await use(client);
   } finally {
-    await transport.terminateSession();
     await client.close();
   }
 };

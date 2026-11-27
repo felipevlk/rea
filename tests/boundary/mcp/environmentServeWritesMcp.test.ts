@@ -126,7 +126,10 @@ processTest(
     ).resolves.toMatchObject({ result: {} });
     const client = new Client(
       { name: "own-keys-writes", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     await client.connect(new StreamableHTTPClientTransport(started.url));
     try {
@@ -183,7 +186,10 @@ processTest(
     ]);
     const client = new Client(
       { name: "write-views", version: "1" },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     await client.connect(new StreamableHTTPClientTransport(started.url));
     try {
@@ -274,7 +280,10 @@ processTest(
         name: "write-schema-defaults",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     await client.connect(new StreamableHTTPClientTransport(started.url));
     try {
@@ -384,7 +393,10 @@ describe("rea environment-serve write tools", () => {
       ]);
       const client = new Client(
         { name: "environment-writes", version: "1" },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+        {
+          jsonSchemaValidator: createMcpSchemaValidation(),
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+        },
       );
       await client.connect(new StreamableHTTPClientTransport(started.url));
       try {
@@ -475,7 +487,10 @@ describe("rea environment-serve write tools", () => {
       ]);
       const client = new Client(
         { name: "raw-utf16-writes", version: "1" },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+        {
+          jsonSchemaValidator: createMcpSchemaValidation(),
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+        },
       );
       await client.connect(new StreamableHTTPClientTransport(started.url));
       try {
@@ -546,7 +561,10 @@ processTest(
         name: "bulk-response-verification",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     await client.connect(new StreamableHTTPClientTransport(started.url));
     try {
@@ -650,7 +668,10 @@ processTest.for([
         name: "contradictory-reference",
         version: "1",
       },
-      { jsonSchemaValidator: createMcpSchemaValidation() },
+      {
+        jsonSchemaValidator: createMcpSchemaValidation(),
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      },
     );
     await client.connect(new StreamableHTTPClientTransport(started.url));
     try {

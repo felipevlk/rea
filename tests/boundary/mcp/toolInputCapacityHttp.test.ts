@@ -34,7 +34,10 @@ const openHttp = async (
   );
   const client = new Client(
     { name: "input-capacity-http", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   const transport = new StreamableHTTPClientTransport(url, {
     // SDK output-schema compilation can outlive an idle pooled socket on two
@@ -77,7 +80,8 @@ processTest(
       },
     });
     expect(Buffer.byteLength(JSON.stringify(result))).toBeLessThan(4096);
-    await client.ping();
+    // MCP 2026-07-28 has no ping; a listing proves the endpoint still answers.
+    expect((await client.listTools()).tools.length).toBeGreaterThan(0);
     const healthy = await client.callTool({
       name: "binary_session",
       arguments: {},
@@ -161,7 +165,8 @@ processTest(
       reported_limits: { max_input_elements: 1_024 },
     });
     expect(Buffer.byteLength(JSON.stringify(result))).toBeLessThan(4096);
-    await client.ping();
+    // MCP 2026-07-28 has no ping; a listing proves the endpoint still answers.
+    expect((await client.listTools()).tools.length).toBeGreaterThan(0);
     const healthy = await client.callTool({
       name: "inspect_analysis_settings",
       arguments: {},

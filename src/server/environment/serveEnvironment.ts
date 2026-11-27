@@ -411,7 +411,7 @@ export const serveEnvironment = async (
 ): Promise<Result<ServedEnvironment, AnalysisResourceConstraintError>> => {
   const { source, host, port, logger } = options;
   const name = options.environmentName ?? source.manifest.name;
-  // One store per process: every MCP session and the data plane share it.
+  // One store per process: every MCP request and the data plane share it.
   const store =
     options.state === undefined
       ? undefined

@@ -2360,6 +2360,11 @@ clients that refresh `tools/list` after `notifications/tools/list_changed`.
 The default, `full`, retains the complete upfront advertisement. Restart the
 server to change profiles. See [client configuration](../getting-started/client-configuration.md#hotcold-catalogs).
 
+MCP `2026-07-28` over HTTP is stateless: every request gets its own server
+instance, so there is no connection whose catalog could stay loaded. `rea mcp
+--http` therefore refuses `hot-cold` at startup and asks for `full` (or the
+stdio transport), where the profile remains supported.
+
 Hot/cold initially advertises `binary_session`, `open_binary`, `close_binary`,
 `get_evidence_bundle`, and the adapter's `discover_tools`.
 `inspect_analysis_view` is loaded on demand like other analysis tools. When a

@@ -136,7 +136,10 @@ for (const [mode, appended] of [
       ]);
       const client = new Client(
         { name: "sparse-clock-writes", version: "1" },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+        {
+          jsonSchemaValidator: createMcpSchemaValidation(),
+          versionNegotiation: { mode: { pin: "2026-07-28" } },
+        },
       );
       try {
         await client.connect(new StreamableHTTPClientTransport(started.url));

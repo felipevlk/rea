@@ -673,95 +673,77 @@ it("guided prompt completion avoids cold startup and cancels warm lookup on clos
   expect((await pending).completion.values).toEqual([]);
 });
 
-it.each(["replacement", "shutdown"])(
-  "waits for cancelled completion cleanup before HTTP %s",
-  async (ending) => {
-    const completionStart = phaseArrival();
-    const completionAbort = phaseArrival();
-    const completionCleanup = phaseGate();
-    const server = new EvidenceMcpServer(
-      { name: "http-completion-drain", version: "1" },
-      {},
-      undefined,
-      createToolResultDelivery(STDIO_DEFAULT_MAX_BUFFER_SIZE),
-    );
-    const connections = vi.spyOn(server, "connect");
-    let calls = 0;
-    registerGuidedPrompts(server, {
-      async execute(_operation, _parameters, options) {
-        if (++calls > 1) return observed(["fresh-document"]);
-        completionStart.arrive();
-        try {
-          await new Promise<void>((resolve) => {
-            options?.signal?.addEventListener(
-              "abort",
-              () => {
-                completionAbort.arrive();
-                resolve();
-              },
-              { once: true },
-            );
-          });
-        } finally {
-          await completionCleanup.hold();
-        }
-        return observed(["old-document"]);
-      },
-    });
-    const served = await serveStreamableHttp({
-      host: "127.0.0.1",
-      port: 0,
-      createMcpServer: () => server,
-    });
-    retainPromptResources(served);
-    const connectHttp = async () => {
-      const client = new Client(
-        { name: "completion-http", version: "1" },
-        { jsonSchemaValidator: createMcpSchemaValidation() },
+it("waits for cancelled completion cleanup before HTTP shutdown", async () => {
+  const completionStart = phaseArrival();
+  const completionAbort = phaseArrival();
+  const completionCleanup = phaseGate();
+  let factoryCalls = 0;
+  const served = await serveStreamableHttp({
+    host: "127.0.0.1",
+    port: 0,
+    createMcpServer: () => {
+      factoryCalls += 1;
+      const server = new EvidenceMcpServer(
+        { name: "http-completion-drain", version: "1" },
+        {},
+        undefined,
+        createToolResultDelivery(STDIO_DEFAULT_MAX_BUFFER_SIZE),
       );
-      retainPromptResources(client);
-      await client.connect(
-        new StreamableHTTPClientTransport(new URL(served.url)),
-      );
-      return client;
-    };
-    const first = await connectHttp();
-    let next: Client | undefined;
-    let finishing: Promise<void> | undefined;
-    let initial: ReturnType<typeof complete> | undefined;
-    try {
-      initial = complete(first, "document", "");
-      void initial.catch(() => undefined);
-      await completionStart.reached(initial, "prompt completion start");
-      let finished = false;
-      finishing = (
-        ending === "shutdown"
-          ? served.close()
-          : connectHttp().then((value) => {
-              next = value;
-            })
-      ).then(() => {
-        finished = true;
+      registerGuidedPrompts(server, {
+        async execute(_operation, _parameters, options) {
+          completionStart.arrive();
+          try {
+            await new Promise<void>((resolve) => {
+              options?.signal?.addEventListener(
+                "abort",
+                () => {
+                  completionAbort.arrive();
+                  resolve();
+                },
+                { once: true },
+              );
+            });
+          } finally {
+            await completionCleanup.hold();
+          }
+          return observed(["old-document"]);
+        },
       });
-      await completionAbort.reached(
-        finishing,
-        "prompt completion cancellation",
-      );
-      await new Promise<void>((resolve) => setImmediate(resolve));
-      expect(connections).toHaveBeenCalledTimes(1);
-      expect(finished).toBe(false);
-      completionCleanup.release();
-      await finishing;
-      if (next !== undefined)
-        expect(await complete(next, "document", "fresh")).toEqual([
-          "fresh-document",
-        ]);
-    } finally {
-      completionCleanup.release();
-      await finishing?.catch(() => undefined);
-    }
-  },
-);
+      return server;
+    },
+  });
+  retainPromptResources(served);
+  const client = new Client(
+    { name: "completion-http", version: "1" },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
+  );
+  retainPromptResources(client);
+  await client.connect(new StreamableHTTPClientTransport(new URL(served.url)));
+  let finishing: Promise<void> | undefined;
+  let initial: ReturnType<typeof complete> | undefined;
+  try {
+    initial = complete(client, "document", "");
+    void initial.catch(() => undefined);
+    await completionStart.reached(initial, "prompt completion start");
+    expect(factoryCalls).toBeGreaterThan(0);
+    let finished = false;
+    finishing = served.close().then(() => {
+      finished = true;
+    });
+    await completionAbort.reached(finishing, "prompt completion cancellation");
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(finished).toBe(false);
+    completionCleanup.release();
+    await finishing;
+  } finally {
+    completionCleanup.release();
+    await finishing?.catch(() => undefined);
+    await client.close();
+  }
+});
 
 describe("guided prompt completion lifecycle", () => {
   it("survives a cancelled completion and ignores its late result", async () => {

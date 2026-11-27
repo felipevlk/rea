@@ -68,7 +68,6 @@ const httpRuntimeDependencies = (
             throw new TypeError("HTTP MCP servers must track tool completion");
           return server;
         },
-        closeInstance: false,
         ...options,
       });
     },

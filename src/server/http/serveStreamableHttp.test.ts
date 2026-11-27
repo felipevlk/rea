@@ -3,7 +3,6 @@ import {
   Client,
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/server";
 import { Agent, request as httpRequest } from "node:http";
 import { connect as connectTcp, createServer, type Socket } from "node:net";
 import pino from "pino";
@@ -21,7 +20,6 @@ import {
 import { closeVerifierResources } from "../../../scripts/lib/verifier-cleanup.mjs";
 import {
   hostHeaderAllowlist,
-  McpSessionSlot,
   serveStreamableHttp,
   type StreamableHttpServer,
 } from "./serveStreamableHttp.js";
@@ -32,13 +30,6 @@ import { validateMcpHttpCommand } from "../../main/mcpHttpArguments.js";
 import { RequestTrackingMcpServer } from "../RequestTrackingMcpServer.js";
 import { testWaitDeadline, waitFor } from "../../../tests/support/testWait.js";
 import { ProviderCleanupError } from "../../domain/providerCleanupError.js";
-import {
-  CallerAbort,
-  OwnerCancellation,
-} from "../../domain/analysisErrorCore.js";
-import { EvidenceMcpServer } from "../EvidenceMcpServer.js";
-import { createToolResultDelivery } from "../toolResult.js";
-import { ok } from "../../domain/result.js";
 
 const servers: StreamableHttpServer[] = [];
 
@@ -94,7 +85,10 @@ const start = async (
 
 const connect = async (url: string) => {
   const transport = new StreamableHTTPClientTransport(new URL(url));
-  const client = new Client({ name: "streamable-http-adapter", version: "1" });
+  const client = new Client(
+    { name: "streamable-http-adapter", version: "1" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
   await client.connect(transport);
   return { transport, client };
 };
@@ -161,88 +155,60 @@ const waitForSocketClose = async (socket: Socket) => {
     });
 };
 
-/** A new client's initialize as the bridge hands it to the slot: no session id yet. */
-const initializeRequest = (): Request =>
-  new Request("http://127.0.0.1/mcp", {
-    method: "POST",
-    headers: {
-      accept: "application/json, text/event-stream",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: 1,
-      method: "initialize",
-      params: {
-        protocolVersion: "2025-11-25",
-        capabilities: {},
-        clientInfo: { name: "racing-client", version: "1" },
+const MODERN_VERSION = "2026-07-28";
+
+/** One 2026-07-28 JSON-RPC request body with its per-request `_meta` envelope. */
+const modernBody = (method: string, params: Record<string, unknown> = {}) =>
+  JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method,
+    params: {
+      ...params,
+      _meta: {
+        "io.modelcontextprotocol/protocolVersion": MODERN_VERSION,
+        "io.modelcontextprotocol/clientInfo": { name: "test", version: "1" },
+        "io.modelcontextprotocol/clientCapabilities": {},
       },
-    }),
-  });
-
-/** A post that already names a session, so it must not open one. */
-const sessionPost = (sessionId: string, body: unknown): Request =>
-  new Request("http://127.0.0.1/mcp", {
-    method: "POST",
-    headers: {
-      accept: "application/json, text/event-stream",
-      "content-type": "application/json",
-      "mcp-session-id": sessionId,
     },
-    body: JSON.stringify(body),
   });
 
-const echoCall = {
-  jsonrpc: "2.0",
-  id: 2,
-  method: "tools/call",
-  params: { name: "echo", arguments: { text: "kept" } },
-};
-
-/** The one JSON-RPC result in a completed initialize response. */
-const initializationResult = async (response: Response): Promise<unknown> => {
-  const body = await response.text();
-  const results = body.split(/\r?\n/u).flatMap((line) => {
-    if (!line.startsWith("data: ")) return [];
-    const payload = line.slice("data: ".length);
-    if (payload.length === 0) return [];
-    const message = JSON.parse(payload) as { result?: unknown };
-    return message.result === undefined ? [] : [message.result];
-  });
-  expect(results).toHaveLength(1);
-  return results[0];
-};
-
-const completedInitialization = {
-  protocolVersion: "2025-11-25",
-  serverInfo: { name: "echo-fixture", version: "1" },
-};
-
-it("closes a bound listener without announcing it when startup aborts during factory creation", async () => {
-  const controller = new AbortController();
-  const reason = new Error("startup cancelled");
-  const lines: string[] = [];
-  const closed = vi.fn();
-  await expect(
-    serveStreamableHttp({
-      host: "127.0.0.1",
-      port: 0,
-      signal: controller.signal,
-      createMcpServer: () => {
-        controller.abort(reason);
-        return createEchoServer(closed);
-      },
-      logger: pino({}, { write: (line) => lines.push(line) }),
-    }),
-  ).rejects.toBe(reason);
-  expect(closed).toHaveBeenCalledTimes(1);
-  expect(lines.join("")).not.toContain("MCP transport listening");
+const modernHeaders = (method: string, extra: Record<string, string> = {}) => ({
+  "content-type": "application/json",
+  accept: "application/json, text/event-stream",
+  "mcp-protocol-version": MODERN_VERSION,
+  "mcp-method": method,
+  ...extra,
 });
 
-it("announces the bound URL and serves one session at a time on one live instance", async () => {
-  const { served, entries, messages, factoryCalls, shutdownHooks } =
-    await start();
+/** A raw 2026 request that bypasses the SDK client, so the wire shape is explicit. */
+const modernRequest = (
+  url: URL,
+  method: string,
+  params: Record<string, unknown> = {},
+  extra: Record<string, string> = {},
+) =>
+  rawHttpRequest(url, {
+    method: "POST",
+    headers: modernHeaders(method, extra),
+    body: modernBody(method, params),
+  });
+
+/** A legacy 2025 initialize, which a modern-only endpoint must refuse. */
+const legacyInitialize = () =>
+  JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: "2025-11-25",
+      capabilities: {},
+      clientInfo: { name: "legacy-client", version: "1" },
+    },
+  });
+
+it("announces the bound URL and serves stateless 2026-07-28 calls to concurrent clients", async () => {
+  const { served, entries, factoryCalls } = await start();
   expect(new URL(served.url).pathname).toBe("/mcp");
   expect(entries()).toContainEqual(
     expect.objectContaining({
@@ -252,175 +218,87 @@ it("announces the bound URL and serves one session at a time on one live instanc
     }),
   );
   const first = await connect(served.url);
-  const sessionId = first.transport.sessionId;
-  expect(sessionId).toEqual(expect.any(String));
-  await expect(echo(first.client, "hi")).resolves.toEqual([
-    { type: "text", text: "hi" },
-  ]);
-  // A new client's initialize replaces the open session; the earlier client is refused.
   const second = await connect(served.url);
-  expect(second.transport.sessionId).toEqual(expect.any(String));
-  expect(second.transport.sessionId).not.toBe(sessionId);
-  await expect(echo(first.client, "stale")).rejects.toThrow();
-  await expect(echo(second.client, "live")).resolves.toEqual([
-    { type: "text", text: "live" },
-  ]);
-  await first.client.close();
-  // DELETE ends the session, not the server: the instance keeps serving.
-  await second.transport.terminateSession();
+  // The modern era has no MCP session id; each request is independent.
+  expect(first.transport.sessionId).toBeUndefined();
   expect(second.transport.sessionId).toBeUndefined();
+  await expect(echo(first.client, "first")).resolves.toEqual([
+    { type: "text", text: "first" },
+  ]);
+  await expect(echo(second.client, "second")).resolves.toEqual([
+    { type: "text", text: "second" },
+  ]);
+  // The endpoint owns one instance per request and hands each to the factory.
+  expect(factoryCalls()).toBeGreaterThanOrEqual(2);
+  await first.client.close();
   await second.client.close();
-  const third = await connect(served.url);
-  await expect(echo(third.client, "again")).resolves.toEqual([
-    { type: "text", text: "again" },
-  ]);
-  expect(factoryCalls()).toBe(1);
-  expect(shutdownHooks()).toBe(0);
-  expect(
-    messages().filter((msg) => msg === "MCP HTTP session opened"),
-  ).toHaveLength(3);
-  expect(messages()).toContain("MCP HTTP session replaced by a new client");
-  // Closing the listener with a session open is the shutdown the instance's hook waits for.
-  await served.close();
-  expect(shutdownHooks()).toBe(1);
-  await third.client.close();
 });
 
-it("keeps the instance's shutdown hook when two initialize requests race to replace an open session", async () => {
-  let shutdownHooks = 0;
-  const slot = new McpSessionSlot(
-    createEchoServer(() => {
-      shutdownHooks += 1;
-    }),
-    undefined,
+it("answers server/discover with 2026-07-28 and the echo server's capabilities", async () => {
+  const { served } = await start();
+  const discovered = await modernRequest(
+    new URL(served.url),
+    "server/discover",
   );
-  const opened = await slot.handle(initializeRequest());
-  expect(opened.status).toBe(200);
-  await expect(initializationResult(opened)).resolves.toMatchObject(
-    completedInitialization,
-  );
-  // The second initialize waits until the first replacement has answered, then replaces that session.
-  const raced = await Promise.all([
-    slot.handle(initializeRequest()),
-    slot.handle(initializeRequest()),
-  ]);
-  expect(raced.map((response) => response.status)).toEqual([200, 200]);
-  const ids = raced.map((response) => response.headers.get("mcp-session-id"));
-  expect(ids[0]).toEqual(expect.any(String));
-  expect(ids[1]).toEqual(expect.any(String));
-  expect(ids[0]).not.toBe(ids[1]);
-  for (const response of raced) {
-    await expect(initializationResult(response)).resolves.toMatchObject(
-      completedInitialization,
-    );
-  }
-  expect(shutdownHooks).toBe(0);
-  // Only the slot's own close is the shutdown the instance's hook waits for.
-  await slot.close();
-  expect(shutdownHooks).toBe(1);
+  expect(discovered.status).toBe(200);
+  expect(JSON.parse(discovered.body)).toMatchObject({
+    result: {
+      supportedVersions: [MODERN_VERSION],
+      capabilities: { tools: { listChanged: true } },
+    },
+  });
 });
 
-it("refuses a session id that is not live and does not arm a transport", async () => {
-  let connections = 0;
-  const server = createEchoServer(() => undefined);
-  const connectServer = server.connect.bind(server);
-  const admitted = phaseGate();
-  server.connect = async (transport) => {
-    connections += 1;
-    await admitted.hold();
-    await connectServer(transport);
-  };
-  const slot = new McpSessionSlot(server, undefined);
-  let arming: Promise<Response> | undefined;
-  try {
-    const absent = await slot.handle(sessionPost("missing-session", echoCall));
-    expect(absent.status).toBe(404);
-    await expect(absent.json()).resolves.toMatchObject({
-      error: { message: "Session not found" },
+it("rejects the 2025 initialize handshake with the modern-only supported list", async () => {
+  const { served } = await start();
+  const refused = await rawHttpRequest(new URL(served.url), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+    },
+    body: legacyInitialize(),
+  });
+  expect(refused.status).toBe(400);
+  expect(JSON.parse(refused.body)).toMatchObject({
+    jsonrpc: "2.0",
+    error: {
+      code: -32022,
+      message: expect.stringContaining("2025-11-25"),
+      data: { supported: [MODERN_VERSION], requested: "2025-11-25" },
+    },
+  });
+});
+
+it("refuses 2025 session operations instead of opening a stream or session", async () => {
+  const { served } = await start();
+  const url = new URL(served.url);
+  for (const method of ["GET", "DELETE"]) {
+    const refused = await rawHttpRequest(url, {
+      method,
+      headers: {
+        accept: "text/event-stream",
+        "mcp-session-id": "legacy-session",
+        "mcp-protocol-version": "2025-11-25",
+      },
     });
-    expect(connections).toBe(0);
-
-    arming = slot.handle(initializeRequest());
-    await admitted.reached(arming, "transport connect");
-    const during = await slot.handle(sessionPost("missing-session", echoCall));
-    expect(during.status).toBe(404);
-    await expect(during.json()).resolves.toMatchObject({
-      error: { message: "Session not found" },
-    });
-    expect(connections).toBe(1);
-    admitted.release();
-    const opened = await arming;
-    expect(opened.status).toBe(200);
-    const sessionId = opened.headers.get("mcp-session-id");
-    expect(sessionId).toEqual(expect.any(String));
-
-    const wrong = await slot.handle(sessionPost("other-session", echoCall));
-    expect(wrong.status).toBe(404);
-    expect(connections).toBe(1);
-
-    const live = await slot.handle(sessionPost(sessionId ?? "", echoCall));
-    expect(live.status).toBe(200);
-    expect(await live.text()).toContain('"text":"kept"');
-    expect(connections).toBe(1);
-  } finally {
-    admitted.release();
-    await arming?.catch(() => undefined);
-    await slot.close();
+    expect(refused.status, method).toBeGreaterThanOrEqual(400);
+    expect(refused.body, method).toContain('"jsonrpc":"2.0"');
   }
 });
 
-it("refuses an unknown session id without waiting for a session drain", async () => {
-  const drainHold = phaseGate();
-  const server = createEchoServer(() => undefined);
-  const drain = server.drainRequests.bind(server);
-  server.drainRequests = async (timeoutMs) => {
-    await drainHold.hold();
-    return drain(timeoutMs);
-  };
-  const slot = new McpSessionSlot(server, undefined);
-  let replacement: Promise<Response> | undefined;
-  let matching: Promise<Response> | undefined;
-  try {
-    const opened = await slot.handle(initializeRequest());
-    const sessionId = opened.headers.get("mcp-session-id");
-    expect(sessionId).toEqual(expect.any(String));
-    await expect(initializationResult(opened)).resolves.toMatchObject(
-      completedInitialization,
-    );
-    let replaced = false;
-    replacement = slot.handle(initializeRequest()).then((response) => {
-      replaced = true;
-      return response;
-    });
-    await drainHold.reached(replacement, "session drain");
-    const stale = await slot.handle(sessionPost("missing-session", echoCall));
-    expect(stale.status).toBe(404);
-    await expect(stale.json()).resolves.toMatchObject({
-      error: { message: "Session not found" },
-    });
-    expect(replaced).toBe(false);
-    let matched = false;
-    matching = slot
-      .handle(sessionPost(sessionId ?? "", echoCall))
-      .then((response) => {
-        matched = true;
-        return response;
-      });
-    await new Promise<void>((resolve) => setImmediate(resolve));
-    expect(matched).toBe(false);
-    drainHold.release();
-    expect((await matching).status).toBe(404);
-    const replacedResponse = await replacement;
-    expect(replacedResponse.status).toBe(200);
-    await expect(initializationResult(replacedResponse)).resolves.toMatchObject(
-      completedInitialization,
-    );
-    expect(replaced).toBe(true);
-  } finally {
-    drainHold.release();
-    await Promise.allSettled([replacement, matching]);
-    await slot.close();
-  }
+it("refuses batches, which the 2026 request envelope does not admit", async () => {
+  const { served } = await start();
+  const refused = await rawHttpRequest(new URL(served.url), {
+    method: "POST",
+    headers: modernHeaders("server/discover"),
+    body: `[${modernBody("server/discover")}]`,
+  });
+  expect(refused.status).toBe(400);
+  expect(JSON.parse(refused.body)).toMatchObject({
+    jsonrpc: "2.0",
+    error: { code: expect.any(Number) },
+  });
 });
 
 it("serves plain routes beside the MCP endpoint and answers unknown paths with 404", async () => {
@@ -579,6 +457,23 @@ it("reports a port that cannot be bound as a typed listen error naming the cause
   await expect(failed).rejects.toThrow(/EADDRINUSE/u);
 });
 
+it("closes a listener whose startup signal aborted before it bound and frees the port", async () => {
+  const port = await listenEphemeral();
+  const reason = new Error("startup cancelled");
+  const controller = new AbortController();
+  controller.abort(reason);
+  await expect(
+    serveStreamableHttp({
+      host: "127.0.0.1",
+      port,
+      signal: controller.signal,
+      createMcpServer: () => createEchoServer(() => undefined),
+    }),
+  ).rejects.toBe(reason);
+  const rebind = await start({ port });
+  expect(rebind.served.close).toBeTypeOf("function");
+});
+
 it("keeps the SDK loopback allowlist, plus the bind's own hostname, for every loopback spelling", () => {
   const sdk = ["localhost", "127.0.0.1", "[::1]"];
   expect(hostHeaderAllowlist("127.0.0.1", "127.0.0.1")).toEqual(sdk);
@@ -605,86 +500,6 @@ it("keeps the SDK loopback allowlist, plus the bind's own hostname, for every lo
   expect(hostHeaderAllowlist("not a host", "192.0.2.10")).toBeUndefined();
 });
 
-it("refuses requests once the slot is closed and joins an initialize that is still arming", async () => {
-  let shutdowns = 0;
-  const slot = new McpSessionSlot(
-    createEchoServer(() => {
-      shutdowns += 1;
-    }),
-    undefined,
-  );
-  const arming = slot.handle(initializeRequest());
-  await slot.close();
-  expect((await arming).status).toBe(503);
-  expect(shutdowns).toBe(1);
-  expect((await slot.handle(initializeRequest())).status).toBe(503);
-});
-
-it("retries unfinished cleanup after a close stage fails instead of replaying the failure", async () => {
-  let failures = 1;
-  const { served } = await start({
-    createMcpServer: () => {
-      const server = createEchoServer(() => undefined);
-      const original = server.close.bind(server);
-      server.close = async () => {
-        if (failures > 0) {
-          failures -= 1;
-          throw new Error("provider cleanup failed");
-        }
-        await original();
-      };
-      return server;
-    },
-  });
-  await expect(served.close()).rejects.toThrow("provider cleanup failed");
-  await expect(served.close()).resolves.toBeUndefined();
-  await expect(rawHttpRequest(new URL(served.url))).rejects.toMatchObject({
-    code: "ECONNREFUSED",
-  });
-});
-
-it("refuses inadmissible sessionless initialize requests without replacing the live session", async () => {
-  const { served } = await start();
-  const { client } = await connect(served.url);
-  const url = new URL(served.url);
-  const body = await initializeRequest().text();
-  const refusals: ReadonlyArray<Readonly<Record<string, string>>> = [
-    { "content-type": "text/plain" },
-    { "content-type": "application/json-patch+json" },
-    { accept: "application/json-patch+json, text/event-streaming" },
-    { accept: "application/json;q=0, text/event-stream" },
-    { accept: 'application/json;note=", text/event-stream;x=1"' },
-    { accept: "Application/JSON, Text/Event-Stream" },
-    { origin: "http://foreign.example" },
-  ];
-  try {
-    for (const headers of refusals) {
-      const refused = await rawHttpRequest(url, {
-        method: "POST",
-        headers: {
-          host: url.host,
-          "content-type": "application/json",
-          accept: "application/json, text/event-stream",
-          ...headers,
-        },
-        body,
-      });
-      if (headers.origin !== undefined) expect(refused.status).toBe(403);
-      else {
-        expect(refused.status, JSON.stringify(headers)).toBeGreaterThanOrEqual(
-          400,
-        );
-        expect(refused.status, JSON.stringify(headers)).toBeLessThan(500);
-      }
-    }
-    expect(await echo(client, "still here")).toEqual([
-      { type: "text", text: "still here" },
-    ]);
-  } finally {
-    await client.close();
-  }
-});
-
 it("accepts a same-origin browser Origin carrying the bound port on the MCP endpoint and on routes", async () => {
   const { served } = await start({
     routes: [
@@ -692,7 +507,6 @@ it("accepts a same-origin browser Origin carrying the bound port on the MCP endp
     ],
   });
   const url = new URL(served.url);
-  const body = await initializeRequest().text();
   for (const name of ["127.0.0.1", "localhost"]) {
     const headers = {
       host: `${name}:${url.port}`,
@@ -700,16 +514,13 @@ it("accepts a same-origin browser Origin carrying the bound port on the MCP endp
     };
     const route = await rawHttpRequest(new URL("/health", url), { headers });
     expect(route.status).toBe(200);
-    const initialize = await rawHttpRequest(url, {
-      method: "POST",
-      headers: {
-        ...headers,
-        "content-type": "application/json",
-        accept: "application/json, text/event-stream",
-      },
-      body,
-    });
-    expect(initialize.status).toBe(200);
+    const discovered = await modernRequest(
+      url,
+      "server/discover",
+      {},
+      { origin: headers.origin, host: headers.host },
+    );
+    expect(discovered.status).toBe(200);
   }
 });
 
@@ -779,105 +590,15 @@ it("refuses a scoped IPv6 bind before creating anything and keeps bind failures 
   ).rejects.toThrow(/EADDRINUSE/u);
 });
 
-it("leaves the instance to its owner when closeInstance is false", async () => {
-  let instanceCloses = 0;
-  const server = createEchoServer(() => undefined);
-  const original = server.close.bind(server);
-  server.close = async () => {
-    instanceCloses += 1;
-    await original();
-  };
-  const served = await serveStreamableHttp({
-    host: "127.0.0.1",
-    port: 0,
-    closeInstance: false,
-    createMcpServer: () => server,
-  });
-  await served.close();
-  expect(instanceCloses).toBe(0);
-  await server.close();
-  expect(instanceCloses).toBe(1);
-});
-
-it("keeps the live session when the new client left before its initialize was probed", async () => {
-  const slot = new McpSessionSlot(
-    createEchoServer(() => undefined),
-    undefined,
-  );
-  const close = vi.spyOn(
-    WebStandardStreamableHTTPServerTransport.prototype,
-    "close",
-  );
-  try {
-    expect((await slot.handle(initializeRequest())).status).toBe(200);
-    const left = new AbortController();
-    left.abort();
-    const abandoned = new Request(initializeRequest(), { signal: left.signal });
-    expect((await slot.handle(abandoned)).status).toBe(400);
-    expect(close).not.toHaveBeenCalled();
-    expect((await slot.handle(initializeRequest())).status).toBe(200);
-    expect(close).toHaveBeenCalledTimes(1);
-  } finally {
-    close.mockRestore();
-    await slot.close();
-  }
-});
-
-it("keeps a session whose transport shutdown failed so the next close retries it", async () => {
-  let shutdowns = 0;
-  const slot = new McpSessionSlot(
-    createEchoServer(() => {
-      shutdowns += 1;
-    }),
-    undefined,
-  );
-  // The slot binds the transport's close when it arms, so the spy must exist before the first request.
-  const close = vi
-    .spyOn(WebStandardStreamableHTTPServerTransport.prototype, "close")
-    .mockImplementationOnce(() => Promise.reject(new Error("transport stuck")));
-  try {
-    await slot.handle(initializeRequest());
-    await expect(slot.close()).rejects.toThrow("transport stuck");
-    expect(shutdowns).toBe(0);
-    await expect(slot.close()).resolves.toBeUndefined();
-    expect(shutdowns).toBe(1);
-    expect((await slot.handle(initializeRequest())).status).toBe(503);
-  } finally {
-    close.mockRestore();
-  }
-});
-
-it("retries the instance hook without a live session and closes it once successfully", async () => {
-  const failure = new Error("hook failed once");
-  const hook = vi.fn(() => {
-    if (hook.mock.calls.length === 1) throw failure;
-  });
-  const { served } = await start({
-    createMcpServer: () => createEchoServer(hook),
-  });
-
-  await expect(served.close()).rejects.toBe(failure);
-  await expect(rawHttpRequest(new URL(served.url))).rejects.toMatchObject({
-    code: "ECONNREFUSED",
-  });
-  await expect(served.close()).resolves.toBeUndefined();
-  await served.close();
-  expect(hook).toHaveBeenCalledTimes(2);
-});
-
-it("answers an oversized sessionless POST promptly instead of stalling on the probe", async () => {
+it("answers an oversized modern POST promptly instead of stalling on the probe", async () => {
   const { served } = await start();
   const { client } = await connect(served.url);
   const url = new URL(served.url);
   // The SDK refuses the body as soon as it exceeds the bound, so the upload may end in a broken pipe.
   await rawHttpRequest(url, {
     method: "POST",
-    headers: {
-      host: `127.0.0.1:${url.port}`,
-      "content-type": "application/json",
-      accept: "application/json, text/event-stream",
-    },
-    body: `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"pad":"${"x".repeat(4_500_000)}"}}`,
+    headers: modernHeaders("server/discover"),
+    body: `{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"pad":"${"x".repeat(4_500_000)}","_meta":{"io.modelcontextprotocol/protocolVersion":"${MODERN_VERSION}"}}}`,
   }).then(
     (refused) => {
       expect(refused.status).toBeGreaterThanOrEqual(400);
@@ -1032,45 +753,6 @@ it("refuses raw fragments without changing an encoded query value", async () => 
   });
 });
 
-it("refuses initialize batches before the first session and during a live session", async () => {
-  const { served } = await start();
-  const url = new URL(served.url);
-  const initialize: unknown = JSON.parse(await initializeRequest().text());
-  const assertRefused = async (messages: readonly unknown[]) => {
-    const refused = await rawHttpRequest(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        accept: "application/json, text/event-stream",
-      },
-      body: JSON.stringify(messages),
-    });
-    expect(refused.status).toBe(400);
-    expect(JSON.parse(refused.body)).toMatchObject({
-      id: null,
-      error: {
-        code: -32600,
-        message: "Initialize must be a single JSON-RPC object, not a batch",
-      },
-    });
-  };
-
-  await assertRefused([initialize]);
-  const { client } = await connect(served.url);
-  try {
-    await assertRefused([initialize]);
-    await assertRefused([
-      initialize,
-      { jsonrpc: "2.0", method: "notifications/initialized" },
-    ]);
-    expect(await echo(client, "not evicted")).toEqual([
-      { type: "text", text: "not evicted" },
-    ]);
-  } finally {
-    await client.close();
-  }
-});
-
 it("closes the connection when a route read only part of the body and keeps it after a full read", async () => {
   const { served } = await start({
     routes: [
@@ -1128,151 +810,12 @@ it("closes the connection when a route read only part of the body and keeps it a
   }
 });
 
-it.each(["replacement", "DELETE"])(
-  "waits for a cancelled tool's finally block before reusing the instance after %s",
-  async (ending) => {
-    const toolRun = phaseGate();
-    const toolAbort = phaseArrival();
-    let state = "initial";
-    let connections = 0;
-    const { served } = await start({
-      createMcpServer: () => {
-        const server = createEchoServer(() => undefined);
-        const connectServer = server.connect.bind(server);
-        server.connect = async (transport) => {
-          connections += 1;
-          await connectServer(transport);
-        };
-        server.registerTool(
-          "slow",
-          { inputSchema: z.object({}) },
-          async (_args, context) => {
-            context.mcpReq.signal.addEventListener(
-              "abort",
-              () => toolAbort.arrive(),
-              { once: true },
-            );
-            try {
-              await toolRun.hold();
-              return { content: [] };
-            } finally {
-              state = "old-finally";
-            }
-          },
-        );
-        return server;
-      },
-    });
-    const first = await connect(served.url);
-    let next: Awaited<ReturnType<typeof connect>> | undefined;
-    let replacement: ReturnType<typeof connect> | undefined;
-    let deletion:
-      | ReturnType<typeof first.transport.terminateSession>
-      | undefined;
-    const request = first.client
-      .callTool({ name: "slow", arguments: {} })
-      .catch(() => undefined);
-    try {
-      await toolRun.reached(request, "tool start");
-      deletion =
-        ending === "DELETE" ? first.transport.terminateSession() : undefined;
-      if (deletion !== undefined)
-        await toolAbort.reached(deletion, "tool cancellation");
-      let connected = false;
-      replacement = connect(served.url).then((value) => {
-        connected = true;
-        next = value;
-        return value;
-      });
-      await toolAbort.reached(replacement, "tool cancellation");
-      await new Promise<void>((resolve) => setImmediate(resolve));
-      expect(connections).toBe(1);
-      expect(connected).toBe(false);
-      expect(state).toBe("initial");
-      toolRun.release();
-      await deletion;
-      const connectedNext = await replacement;
-      expect(state).toBe("old-finally");
-      await expect(echo(connectedNext.client, "new session")).resolves.toEqual([
-        { type: "text", text: "new session" },
-      ]);
-    } finally {
-      toolRun.release();
-      await closeVerifierResources([
-        () => first.client.close(),
-        async () => {
-          await Promise.allSettled([request, deletion, replacement]);
-        },
-        async () => {
-          await next?.client.close();
-        },
-      ]);
-    }
-  },
-);
-
-it.each(["ready", "failure"] as const)(
-  "keeps plain routes unavailable while the factory is pending before %s",
-  async (outcome) => {
-    const port = await listenEphemeral();
-    const url = new URL(`http://127.0.0.1:${port}/mcp`);
-    const announcements: string[] = [];
-    const logger = pino(
-      {},
-      {
-        write(line) {
-          if (line.includes("MCP transport listening"))
-            announcements.push(line);
-        },
-      },
-    );
-    const factoryStart = phaseGate();
-    const failure = new Error("provider unavailable");
-    const handled = vi.fn(() => new Response("ready"));
-    const starting = serveStreamableHttp({
-      host: "127.0.0.1",
-      port,
-      logger,
-      createMcpServer: async () => {
-        await factoryStart.hold();
-        if (outcome === "failure") throw failure;
-        return createEchoServer(() => undefined);
-      },
-      routes: [{ method: "GET", path: "/pending", handle: handled }],
-    });
-    const settled = starting.catch(() => undefined);
-    try {
-      await factoryStart.reached(starting, "factory start");
-      expect((await fetch(new URL("/pending", url))).status).toBe(503);
-      expect(handled).not.toHaveBeenCalled();
-      expect(announcements).toEqual([]);
-      factoryStart.release();
-      if (outcome === "failure") {
-        await expect(starting).rejects.toBe(failure);
-        await expect(rawHttpRequest(url)).rejects.toMatchObject({
-          code: "ECONNREFUSED",
-        });
-        expect(announcements).toEqual([]);
-        await start({ port });
-      } else {
-        await starting;
-        expect(announcements).toHaveLength(1);
-        expect((await fetch(new URL("/pending", url))).status).toBe(200);
-        expect(handled).toHaveBeenCalledTimes(1);
-      }
-    } finally {
-      factoryStart.release();
-      await (await settled)?.close();
-    }
-  },
-);
-
 it.each(["open stream", "late response"])(
-  "joins response-body cancellation before provider hooks for %s",
+  "joins response-body cancellation before shutting down for %s",
   async (timing) => {
     const routeStart = phaseArrival();
     const bodyCancel = phaseGate();
-    const { served, shutdownHooks } = await start({
+    const { served } = await start({
       routes: [
         {
           method: "GET",
@@ -1315,10 +858,8 @@ it.each(["open stream", "late response"])(
       await bodyCancel.reached(closing, "body cancellation");
       await new Promise<void>((resolve) => setImmediate(resolve));
       expect(closed).toBe(false);
-      expect(shutdownHooks()).toBe(0);
       bodyCancel.release();
       await closing;
-      expect(shutdownHooks()).toBe(1);
     } finally {
       bodyCancel.release();
       await closeVerifierResources([
@@ -1352,7 +893,7 @@ it.each(["chunk", "headers"])(
         await responseCleanup.hold();
       },
     });
-    const { served, shutdownHooks } = await start({
+    const { served } = await start({
       maxConcurrentDispatches: 1,
       routes: [
         { method: "GET", path: "/health", handle: () => new Response("ok") },
@@ -1386,10 +927,8 @@ it.each(["chunk", "headers"])(
       });
       await new Promise<void>((resolve) => setImmediate(resolve));
       expect(closed).toBe(false);
-      expect(shutdownHooks()).toBe(0);
       responseCleanup.release();
       await closing;
-      expect(shutdownHooks()).toBe(1);
       expect(cancelled).toBe(1);
     } finally {
       responseCleanup.release();
@@ -1410,7 +949,7 @@ it("keeps HEAD delivery prompt while joining a retained tee's cleanup on shutdow
       },
     }),
   );
-  const { served, shutdownHooks } = await start({
+  const { served } = await start({
     routes: [
       { method: "HEAD", path: "/cached", handle: () => original.clone() },
     ],
@@ -1427,11 +966,9 @@ it("keeps HEAD delivery prompt while joining a retained tee's cleanup on shutdow
     await new Promise<void>((resolve) => setImmediate(resolve));
     expect(closed).toBe(false);
     expect(sourceClosed).toBe(false);
-    expect(shutdownHooks()).toBe(0);
     await original.body?.cancel();
     await closing;
     expect(sourceClosed).toBe(true);
-    expect(shutdownHooks()).toBe(1);
   } finally {
     await original.body?.cancel();
     await closing;
@@ -1440,7 +977,7 @@ it("keeps HEAD delivery prompt while joining a retained tee's cleanup on shutdow
 
 it("retains failed response cleanup and blocks provider teardown and further admission", async () => {
   const failure = new Error("response finalizer failed");
-  const { served, shutdownHooks } = await start({
+  const { served } = await start({
     routes: [
       { method: "GET", path: "/health", handle: () => new Response("ok") },
       {
@@ -1472,7 +1009,6 @@ it("retains failed response cleanup and blocks provider teardown and further adm
       cause: expect.any(AggregateError),
     });
     await expect(served.close()).rejects.toBeInstanceOf(ProviderCleanupError);
-    expect(shutdownHooks()).toBe(0);
     await expect(rawHttpRequest(new URL(served.url))).rejects.toMatchObject({
       code: "ECONNREFUSED",
     });
@@ -1616,11 +1152,11 @@ it.each(["pending handler", "open response"])(
 );
 
 it.each(["prepareShutdown", "close"] as const)(
-  "waits for plain-route finalizers before provider hooks during %s",
+  "waits for plain-route finalizers before shutting down during %s",
   async (method) => {
     const routeStart = phaseArrival();
     const routeFinalizer = phaseGate();
-    const { served, shutdownHooks } = await start({
+    const { served } = await start({
       routes: [
         {
           method: "GET",
@@ -1654,10 +1190,8 @@ it.each(["prepareShutdown", "close"] as const)(
       await routeFinalizer.reached(closing, "route finalizer");
       await new Promise<void>((resolve) => setImmediate(resolve));
       expect(closed).toBe(false);
-      expect(shutdownHooks()).toBe(0);
       routeFinalizer.release();
       await closing;
-      expect(shutdownHooks()).toBe(1);
     } finally {
       routeFinalizer.release();
       await closeVerifierResources([
@@ -1732,6 +1266,12 @@ it("bounds HTTP input dispatch globally and releases admission when an upload le
     maxConcurrentDispatches: 2,
     routes: [
       { method: "GET", path: "/health", handle: () => new Response("ok") },
+      {
+        method: "POST",
+        path: "/upload",
+        handle: async (request) =>
+          Response.json({ bytes: (await request.text()).length }),
+      },
     ],
   });
   const first = await connect(served.url);
@@ -1742,13 +1282,10 @@ it("bounds HTTP input dispatch globally and releases admission when an upload le
       pending.push(
         new Promise<void>((resolve) => {
           const upload = httpRequest(
-            served.url,
+            new URL("/upload", served.url),
             {
               method: "POST",
-              headers: {
-                accept: "application/json, text/event-stream",
-                "content-type": "application/json",
-              },
+              headers: { "content-type": "text/plain" },
             },
             (response) => {
               response.resume();
@@ -1758,22 +1295,17 @@ it("bounds HTTP input dispatch globally and releases admission when an upload le
           );
           uploads.push(upload);
           upload.once("error", () => resolve());
-          upload.write('{"jsonrpc":"2.0",');
+          upload.write("x".repeat(1024));
         }),
       );
     }
-    // A plain route observes the same budget while both sessionless MCP probes
-    // wait for the rest of their bodies. Idle SSE connections consume no permit.
+    // A plain route observes the same budget while both uploads wait for the rest of their bodies.
     await waitFor(async () => {
       expect((await fetch(new URL("/health", served.url))).status).toBe(503);
     });
     const refused = await rawHttpRequest(new URL(served.url), {
       method: "POST",
-      headers: {
-        accept: "application/json, text/event-stream",
-        "content-type": "application/json",
-        "content-length": String(4 * 1024 * 1024),
-      },
+      headers: modernHeaders("server/discover"),
     });
     expect(refused.status).toBe(503);
     expect(refused.headers.connection).toBe("close");
@@ -1792,396 +1324,110 @@ it("bounds HTTP input dispatch globally and releases admission when an upload le
   }
 });
 
+it("serves a JSON response when the client does not accept event streams", async () => {
+  const { served } = await start();
+  const discovered = await modernRequest(
+    new URL(served.url),
+    "server/discover",
+    {},
+    { accept: "application/json" },
+  );
+  expect(discovered.status).toBe(200);
+  expect(discovered.headers["content-type"]).toContain("application/json");
+  expect(JSON.parse(discovered.body)).toMatchObject({
+    result: { supportedVersions: [MODERN_VERSION] },
+  });
+});
+
 it.each([
-  { status: 406, headers: { accept: "application/json" } },
   { status: 415, headers: { "content-type": "text/plain" } },
   { status: 413, headers: { "content-length": String(8 * 1024 * 1024) } },
 ])(
-  "releases an unread body when the SDK refuses it with $status, keeping the live session",
+  "releases an unread body when the SDK refuses it with $status, keeping the endpoint live",
   async ({ status, headers }) => {
-    const slot = new McpSessionSlot(
-      createEchoServer(() => undefined),
-      undefined,
-    );
-    const opened = await slot.handle(initializeRequest());
-    const sessionId = opened.headers.get("mcp-session-id") ?? "";
-    const cancelled = vi.fn();
-    const body = new ReadableStream<Uint8Array>(
-      { cancel: cancelled },
-      { highWaterMark: 0 },
-    );
-    const requestHeaders = new Headers({
-      accept: "application/json, text/event-stream",
-      "content-type": "application/json",
-      "mcp-session-id": sessionId,
+    const { served } = await start();
+    const url = new URL(served.url);
+    const refused = await rawHttpRequest(url, {
+      method: "POST",
+      headers: { ...modernHeaders("server/discover"), ...headers },
+      ...(status === 413 ? {} : { body: modernBody("server/discover") }),
     });
-    for (const [name, value] of Object.entries(headers))
-      if (value !== undefined) requestHeaders.set(name, value);
-    try {
-      const refused = await slot.handle(
-        new Request("http://127.0.0.1/mcp", {
-          method: "POST",
-          headers: requestHeaders,
-          body,
-          duplex: "half",
-        } as RequestInit),
-      );
-      expect(refused.status).toBe(status);
-      await new Promise<void>((resolve) => setImmediate(resolve));
-      expect(cancelled).toHaveBeenCalledTimes(1);
-      const live = await slot.handle(
-        new Request("http://127.0.0.1/mcp", {
-          method: "POST",
-          headers: {
-            accept: "application/json, text/event-stream",
-            "content-type": "application/json",
-            "mcp-session-id": sessionId,
-          },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: 3,
-            method: "tools/call",
-            params: { name: "echo", arguments: { text: "kept" } },
-          }),
-        }),
-      );
-      expect(live.status).toBe(200);
-      expect(live.headers.get("mcp-session-id")).toBe(sessionId);
-      expect(await live.text()).toContain('"text":"kept"');
-    } finally {
-      await slot.close();
-    }
+    expect(refused.status).toBe(status);
+    const { client } = await connect(served.url);
+    expect(await echo(client, "still live")).toEqual([
+      { type: "text", text: "still live" },
+    ]);
+    await client.close();
   },
 );
 
-it.each(["DELETE", "shutdown"])(
-  "ends a real HTTP request with an unfinished upload during %s",
-  async (ending) => {
-    const { served, shutdownHooks } = await start();
-    const first = await connect(served.url);
-    const entered = vi.spyOn(
-      WebStandardStreamableHTTPServerTransport.prototype,
-      "handleRequest",
-    );
-    let next: Awaited<ReturnType<typeof connect>> | undefined;
-    let upload!: ReturnType<typeof httpRequest>;
-    const response = new Promise<number | undefined>((resolve, reject) => {
-      upload = httpRequest(
-        served.url,
-        {
-          method: "POST",
-          headers: {
-            accept: "application/json, text/event-stream",
-            "content-type": "application/json",
-            "mcp-session-id": first.transport.sessionId ?? "",
-          },
-        },
-        (reply) => {
-          reply.resume();
-          reply.once("end", () => resolve(reply.statusCode));
-          reply.once("error", reject);
-        },
-      );
-      upload.once("error", (cause) => {
-        if (ending === "shutdown") resolve(undefined);
-        else reject(cause);
-      });
-      upload.write('{"jsonrpc":"2.0","id":2,"method":"tools/call",');
-    });
-    try {
-      await waitFor(() => {
-        expect(
-          entered.mock.calls.some(
-            ([request]) =>
-              request.method === "POST" &&
-              request.headers.get("mcp-session-id") ===
-                first.transport.sessionId,
-          ),
-        ).toBe(true);
-      });
-      if (ending === "DELETE") {
-        await first.transport.terminateSession();
-        expect(await response).toBe(404);
-        next = await connect(served.url);
-        expect(await echo(next.client, "after upload")).toEqual([
-          { type: "text", text: "after upload" },
-        ]);
-        expect(shutdownHooks()).toBe(0);
-      } else {
-        await served.close();
-        await response;
-        expect(shutdownHooks()).toBe(1);
-      }
-    } finally {
-      upload.destroy();
-      entered.mockRestore();
-      await first.client.close();
-      await next?.client.close();
-    }
-  },
-);
-
-it.each(["replacement", "DELETE", "shutdown"])(
-  "refuses an old session's tool body that finishes reading after %s",
-  async (ending) => {
-    const server = createEchoServer(() => undefined);
-    const called = vi.fn(() => ({ content: [] }));
-    server.registerTool("record", { inputSchema: z.object({}) }, called);
-    const slot = new McpSessionSlot(server, undefined);
-    const opened = await slot.handle(initializeRequest());
-    const sessionId = opened.headers.get("mcp-session-id");
-    expect(sessionId).toEqual(expect.any(String));
-    const requestBodyRead = phaseGate();
-    const body = new ReadableStream<Uint8Array>(
+it("ends a real HTTP request with an unfinished upload during shutdown", async () => {
+  const { served } = await start();
+  const first = await connect(served.url);
+  let upload!: ReturnType<typeof httpRequest>;
+  const response = new Promise<number | undefined>((resolve, reject) => {
+    upload = httpRequest(
+      served.url,
       {
-        async pull(controller) {
-          await requestBodyRead.hold();
-          controller.enqueue(
-            new TextEncoder().encode(
-              JSON.stringify({
-                jsonrpc: "2.0",
-                id: 2,
-                method: "tools/call",
-                params: { name: "record", arguments: {} },
-              }),
-            ),
-          );
-          controller.close();
-        },
-      },
-      { highWaterMark: 0 },
-    );
-    const pending = slot.handle(
-      new Request("http://127.0.0.1/mcp", {
         method: "POST",
-        headers: {
-          accept: "application/json, text/event-stream",
-          "content-type": "application/json",
-          "mcp-session-id": sessionId ?? "",
-        },
-        body,
-        // Node requires duplex for streaming Web Requests.
-        duplex: "half",
-      } as RequestInit),
+        headers: modernHeaders("tools/call", { "mcp-name": "echo" }),
+      },
+      (reply) => {
+        reply.resume();
+        reply.once("end", () => resolve(reply.statusCode));
+        reply.once("error", reject);
+      },
     );
-    try {
-      // With no stream prefetch, this proves the SDK is waiting on the old body.
-      await requestBodyRead.reached(pending, "request body read");
-      if (ending === "shutdown") await slot.close();
-      else {
-        if (ending === "DELETE") {
-          const deleted = await slot.handle(
-            new Request("http://127.0.0.1/mcp", {
-              method: "DELETE",
-              headers: { "mcp-session-id": sessionId ?? "" },
-            }),
-          );
-          expect(deleted.status).toBe(200);
-        }
-        const next = await slot.handle(initializeRequest());
-        expect(next.status).toBe(200);
-        expect(next.headers.get("mcp-session-id")).not.toBe(sessionId);
-      }
-      requestBodyRead.release();
-      const refused = await pending;
-      expect(refused.status).toBe(404);
-      await expect(refused.json()).resolves.toMatchObject({
-        error: { message: "Session not found" },
-      });
-      expect(called).not.toHaveBeenCalled();
-    } finally {
-      requestBodyRead.release();
-      await pending;
-      await slot.close();
-    }
-  },
-);
+    upload.once("error", () => resolve(undefined));
+    upload.write('{"jsonrpc":"2.0","id":2,"method":"tools/call",');
+  });
+  try {
+    await served.close();
+    await response;
+  } finally {
+    upload.destroy();
+    await first.client.close();
+  }
+});
 
-it.each(["replacement", "shutdown"])(
-  "does not start old-session tools across %s at sampled SDK dispatch orderings",
-  async (ending) => {
-    const late: number[] = [];
-    for (let offset = 0; offset < 40; offset += 1) {
-      let ended = false;
-      let connections = 0;
+it("cancels a pending Evidence tool when the listener shuts down", async () => {
+  const toolStart = phaseGate();
+  const toolAbort = phaseArrival<unknown>();
+  const { served } = await start({
+    createMcpServer: () => {
       const server = createEchoServer(() => undefined);
-      const connectServer = server.connect.bind(server);
-      server.connect = async (transport) => {
-        connections += 1;
-        if (connections > 1) ended = true;
-        await connectServer(transport);
-      };
-      server.registerTool("record", { inputSchema: z.object({}) }, () => {
-        if (ended) late.push(offset);
-        return { content: [] };
-      });
-      const slot = new McpSessionSlot(server, undefined);
-      const opened = await slot.handle(initializeRequest());
-      const pending = slot.handle(
-        new Request("http://127.0.0.1/mcp", {
-          method: "POST",
-          headers: {
-            accept: "application/json, text/event-stream",
-            "content-type": "application/json",
-            "mcp-session-id": opened.headers.get("mcp-session-id") ?? "",
-          },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: 2,
-            method: "tools/call",
-            params: { name: "record", arguments: {} },
-          }),
-        }),
-      );
-      try {
-        // Exercise public Request/SDK scheduling, without mocking dispatch or
-        // requiring one particular number of internal SDK await boundaries.
-        for (let step = 0; step < offset; step += 1) await Promise.resolve();
-        if (ending === "replacement") {
-          expect((await slot.handle(initializeRequest())).status).toBe(200);
-        } else {
-          await slot.close();
-          ended = true;
-        }
-        const response = await pending;
-        await response.body?.cancel();
-        await new Promise<void>((resolve) => setImmediate(resolve));
-      } finally {
-        await slot.close();
-      }
-    }
-    expect(late).toEqual([]);
-  },
-);
-
-it.each(["after timeout", "during drain"])(
-  "automatically completes shutdown %s when the retained handler settles",
-  async (shutdownTiming) => {
-    const toolStart = phaseGate();
-    const sessionDrain = phaseArrival();
-    let shutdowns = 0;
-    const { served } = await start({
-      sessionDrainTimeoutMs: 0,
-      createMcpServer: () => {
-        const server = createEchoServer(() => {
-          shutdowns += 1;
-        });
-        const drain = server.drainRequests.bind(server);
-        vi.spyOn(server, "drainRequests").mockImplementation((timeoutMs) => {
-          const result = drain(timeoutMs);
-          sessionDrain.arrive();
-          return result;
-        });
-        server.registerTool("slow", { inputSchema: z.object({}) }, async () => {
+      server.registerTool(
+        "held",
+        { inputSchema: z.strictObject({}) },
+        async (_args, context) => {
+          context.mcpReq.signal.addEventListener(
+            "abort",
+            () => toolAbort.arrive(context.mcpReq.signal.reason),
+            { once: true },
+          );
           await toolStart.hold();
           return { content: [] };
-        });
-        return server;
+        },
+      );
+      return server;
+    },
+  });
+  const first = await connect(served.url);
+  const request = first.client
+    .callTool({ name: "held", arguments: {} })
+    .catch(() => undefined);
+  let closing: Promise<void> | undefined;
+  try {
+    await toolStart.reached(request, "tool start");
+    closing = served.prepareShutdown();
+    await toolAbort.reached(closing, "tool abort");
+  } finally {
+    toolStart.release();
+    await closeVerifierResources([
+      () => first.client.close(),
+      async () => {
+        await Promise.allSettled([request, closing]);
       },
-    });
-    const first = await connect(served.url);
-    const request = first.client
-      .callTool({ name: "slow", arguments: {} })
-      .catch(() => undefined);
-    let replacement: Promise<Response | undefined> | undefined;
-    let pendingClose: Promise<void> | undefined;
-    try {
-      await toolStart.reached(request, "tool start");
-      replacement = fetch(served.url, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json, text/event-stream",
-        },
-        body: await initializeRequest().text(),
-      }).catch((cause: unknown) => {
-        // Full shutdown closes listener sockets, including this pending handover.
-        if (shutdownTiming === "during drain") return undefined;
-        throw cause;
-      });
-      await sessionDrain.reached(replacement, "session drain");
-      pendingClose =
-        shutdownTiming === "during drain" ? served.close() : undefined;
-      const refused = await replacement;
-      if (shutdownTiming === "after timeout") expect(refused?.status).toBe(503);
-      let closed = false;
-      const closing = (pendingClose ?? served.close()).then(() => {
-        closed = true;
-      });
-      await new Promise<void>((resolve) => setImmediate(resolve));
-      expect(closed).toBe(false);
-      expect(shutdowns).toBe(0);
-      toolStart.release();
-      await closing;
-      expect(shutdowns).toBe(1);
-    } finally {
-      toolStart.release();
-      await closeVerifierResources([
-        () => first.client.close(),
-        async () => {
-          await Promise.allSettled([request, replacement]);
-        },
-        async () => {
-          await pendingClose;
-        },
-      ]);
-    }
-  },
-);
-
-it.each(["replacement", "shutdown", "DELETE"] as const)(
-  "tells a pending Evidence tool who ended its session after %s",
-  async (ending) => {
-    const toolStart = phaseGate();
-    const toolAbort = phaseArrival<unknown>();
-    const { served } = await start({
-      createMcpServer: () => {
-        const server = new EvidenceMcpServer(
-          { name: "owner-close-http", version: "1" },
-          { capabilities: {} },
-          () => ok("added"),
-          createToolResultDelivery(4096),
-        );
-        server.registerTool(
-          "held",
-          { inputSchema: z.strictObject({}) },
-          async (_args, context) => {
-            context.mcpReq.signal.addEventListener(
-              "abort",
-              () => toolAbort.arrive(context.mcpReq.signal.reason),
-              { once: true },
-            );
-            await toolStart.hold();
-            return { content: [] };
-          },
-        );
-        return server;
-      },
-    });
-    const first = await connect(served.url);
-    const request = first.client
-      .callTool({ name: "held", arguments: {} })
-      .catch(() => undefined);
-    let ended: Promise<unknown> | undefined;
-    try {
-      await toolStart.reached(request, "tool start");
-      ended =
-        ending === "DELETE"
-          ? first.transport.terminateSession()
-          : ending === "shutdown"
-            ? served.prepareShutdown()
-            : connect(served.url).then((next) => next.client.close());
-      const reason = await toolAbort.reached(ended, "tool abort");
-      if (ending === "DELETE") expect(reason).toBeInstanceOf(CallerAbort);
-      else expect(reason).toBe(OwnerCancellation.ownerClosed);
-    } finally {
-      toolStart.release();
-      await closeVerifierResources([
-        () => first.client.close(),
-        async () => {
-          await Promise.allSettled([request, ended]);
-        },
-      ]);
-    }
-  },
-);
+    ]);
+  }
+});

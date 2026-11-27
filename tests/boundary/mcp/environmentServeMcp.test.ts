@@ -58,7 +58,10 @@ const connect = async (url: URL) => {
   const transport = new StreamableHTTPClientTransport(url);
   const client = new Client(
     { name: "environment-boundary", version: "1" },
-    { jsonSchemaValidator: createMcpSchemaValidation() },
+    {
+      jsonSchemaValidator: createMcpSchemaValidation(),
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
   );
   await client.connect(transport);
   return client;

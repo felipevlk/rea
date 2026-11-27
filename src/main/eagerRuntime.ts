@@ -42,6 +42,18 @@ export const runEager = async (
     dependencies.writeStderr(`${projectAnalysisError(config.error).message}\n`);
     return 1;
   }
+  // MCP 2026-07-28 HTTP is stateless: each request gets its own server
+  // instance, so a per-connection hot/cold catalog cannot persist. Refuse the
+  // contradictory configuration instead of silently advertising the wrong set.
+  if (
+    dependencies.transport === "http" &&
+    config.value.mcpToolCatalogProfile === "hot-cold"
+  ) {
+    dependencies.writeStderr(
+      "REA_MCP_TOOL_CATALOG_PROFILE=hot-cold requires a persistent MCP connection. The 2026-07-28 HTTP transport is stateless; use the full catalog (or the stdio transport).\n",
+    );
+    return 1;
+  }
   const logger = createLogger("mcp", config.value.logLevel);
   const serverLogger = logger.child({ layer: "server" });
   const analysisSettings = new AnalysisSettings(environment);
