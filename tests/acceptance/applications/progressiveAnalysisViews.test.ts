@@ -1,7 +1,8 @@
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { expect, it, vi } from "vitest";
+import { expect, it, onTestFinished, vi } from "vitest";
 import { connectLocalToolsMcp } from "../../fixtures/localToolsMcp.js";
+import { waitFor } from "../../support/testWait.js";
 import { createTestTempDirectory } from "../../fixtures/temporaryDirectory.js";
 import { parseEvidence } from "../../../src/domain/evidence.js";
 import { evidenceBundleSchema } from "../../../src/domain/evidenceBundle.js";
@@ -28,6 +29,9 @@ it("loads retained analysis views only when needed, preserving complete schemas,
   expect(await names()).not.toContain("inspect_analysis_view");
   const changed = vi.fn();
   client.setNotificationHandler("notifications/tools/list_changed", changed);
+  // 2026-07-28 delivers change events on an explicit listen stream.
+  const subscription = await client.listen({ toolsListChanged: true });
+  onTestFinished(() => subscription.close());
   const call = async (name: string, args: Record<string, unknown>) => {
     const result = await client.callTool({ name, arguments: args });
     expect(result.isError, JSON.stringify(result.content)).not.toBe(true);
@@ -50,7 +54,7 @@ it("loads retained analysis views only when needed, preserving complete schemas,
     items: [{ method: "GET", path: "/items", state: "declared" }],
   });
   expect(await names()).not.toContain("inspect_analysis_view");
-  expect(changed).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(changed).toHaveBeenCalledTimes(1));
   await rm(path);
   await call("discover_tools", {
     names: ["inspect_analysis_view", "export_evidence_bundle"],
@@ -61,7 +65,7 @@ it("loads retained analysis views only when needed, preserving complete schemas,
   expect(loaded).toBeDefined();
   // The default output profile omits output schemas from every listing.
   expect(loaded?.outputSchema).toBeUndefined();
-  expect(changed).toHaveBeenCalledTimes(2);
+  await waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
   const source = {
     kind: "retained-evidence",
     evidence_id: selected.parent_evidence_id,
