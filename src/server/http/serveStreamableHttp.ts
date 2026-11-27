@@ -1,4 +1,5 @@
 import {
+  createMcpHandler,
   hostHeaderValidationResponse,
   isInitializeRequest,
   isJsonContentType,
@@ -6,6 +7,7 @@ import {
   originValidationResponse,
   readRequestBody,
   WebStandardStreamableHTTPServerTransport,
+  type McpHttpHandler,
   type McpServer,
   type McpRequestContext,
   type Server,
@@ -545,6 +547,7 @@ export const serveStreamableHttp = async (
   // is created after that, so a bind failure leaves nothing to clean up.
   let allowedHosts: string[] | undefined;
   let slot: McpSessionSlot | undefined;
+  let modern: McpHttpHandler | undefined;
   let origin = "";
   let stopped = false;
   const route: NodeRequestTarget["route"] = async (request) => {
@@ -560,12 +563,12 @@ export const serveStreamableHttp = async (
         : (hostHeaderValidationResponse(request, allowedHosts) ??
           originValidationResponse(request, allowedHosts));
     if (refused !== undefined) return local(refused);
-    if (slot === undefined)
+    if (modern === undefined)
       return local(jsonError(503, -32000, "Server starting"));
     const { pathname } = new URL(request.url);
     if (pathname === MCP_HTTP_PATH)
       return {
-        response: await slot.handle(request),
+        response: await modern.fetch(request),
         admissionLifetime: "dispatch",
       };
     const match = routes.find(
@@ -601,6 +604,7 @@ export const serveStreamableHttp = async (
       await closeHttpServer(httpServer);
     },
     () => slot?.prepareShutdown() ?? Promise.resolve(),
+    () => modern?.close() ?? Promise.resolve(),
     () => requests.drain(),
   ]);
   try {
@@ -672,6 +676,10 @@ export const serveStreamableHttp = async (
     options.sessionDrainTimeoutMs,
   );
   slot = live;
+  modern = createMcpHandler(
+    (context) => options.createMcpServer({ era: "modern" }),
+    { legacy: "reject" },
+  );
   const prepareShutdown = stagedClose([
     prepareTransportShutdown,
     () => live.close(),

@@ -33,7 +33,8 @@ import {
 const runtimeDependencies = (): RuntimeDependencies => ({
   env: process.env,
   stdin: process.stdin,
-  serve: serveStdio,
+  serve: (factory, options) =>
+    serveStdio(factory, { ...options, legacy: "reject" }),
   writeStderr: (text) => process.stderr.write(text),
   setExitCode: (code) => {
     process.exitCode = code;

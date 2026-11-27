@@ -162,7 +162,10 @@ export const runProductionMcpDoctor = async (options: McpDoctorOptions) => {
     },
     stderr.append,
   );
-  const client = new OwnedMcpClient({ name: "rea-mcp-doctor", version: "1" });
+  const client = new OwnedMcpClient(
+    { name: "rea-mcp-doctor", version: "1" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
   let result: ProductionMcpDoctorResult;
   let cleanupFailure: { readonly cause: unknown } | undefined;
   try {
@@ -257,7 +260,7 @@ const inspectProductionMcpSession = async (
 ) => {
   const server = observedMcpServer(client);
   const initialization = {
-    name: "initialize",
+    name: "server/discover",
     ok:
       server.name === PRODUCT_IDENTITY.mcpServerKey &&
       server.version === PRODUCT_IDENTITY.packageVersion &&

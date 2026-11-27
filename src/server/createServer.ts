@@ -115,6 +115,7 @@ const createMcpServer = (
     {
       capabilities: {},
       maxToolInputElements: configured.value,
+      supportedProtocolVersions: ["2026-07-28"],
       instructions: serverInstructions(session !== undefined, (tool) =>
         isToolFamilyAdvertised(advertisedToolFamilies, toolFamilyId(tool)),
       ),
