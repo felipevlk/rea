@@ -339,7 +339,7 @@ linuxIt.each([
     const client = new Client(
       { name: "rizin-stdin", version: "1" },
       {
-        versionNegotiation: { mode: { pin: "2026-07-28" } },
+        versionNegotiation: { mode: "auto" },
         jsonSchemaValidator: createMcpSchemaValidation(),
       },
     );
